@@ -1,16 +1,21 @@
 import { useState } from "react";
 import { AddTaskForm } from "@/components/AddTaskForm";
 import { TaskColumn } from "@/components/TaskColumn";
-import { Task } from "@/components/TaskCard";
+import { TaskEditDialog } from "@/components/TaskEditDialog";
+import { Task, Priority } from "@/components/TaskCard";
 import { CheckSquare } from "lucide-react";
 
 const Index = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
-  const addTask = (title: string) => {
+  const addTask = (title: string, description?: string, priority: Priority = "medium") => {
     const newTask: Task = {
       id: Date.now().toString(),
       title,
+      description,
+      priority,
       completed: false,
       createdAt: new Date(),
     };
@@ -27,6 +32,22 @@ const Index = () => {
           }
         : task
     ));
+  };
+
+  const handleEditTask = (task: Task) => {
+    setEditingTask(task);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleSaveTask = (updatedTask: Task) => {
+    setTasks(tasks.map(task => 
+      task.id === updatedTask.id ? updatedTask : task
+    ));
+  };
+
+  const handleCloseDialog = () => {
+    setIsEditDialogOpen(false);
+    setEditingTask(null);
   };
 
   const todoTasks = tasks.filter(task => !task.completed);
@@ -66,15 +87,25 @@ const Index = () => {
             title="À FAIRE"
             tasks={todoTasks}
             onToggleTask={toggleTask}
+            onEditTask={handleEditTask}
             type="todo"
           />
           <TaskColumn
             title="TERMINÉ"
             tasks={doneTasks}
             onToggleTask={toggleTask}
+            onEditTask={handleEditTask}
             type="done"
           />
         </div>
+
+        {/* Task Edit Dialog */}
+        <TaskEditDialog
+          task={editingTask}
+          open={isEditDialogOpen}
+          onClose={handleCloseDialog}
+          onSave={handleSaveTask}
+        />
 
         {/* Stats */}
         <div className="mt-8 text-center">

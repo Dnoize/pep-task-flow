@@ -7,10 +7,11 @@ interface TaskColumnProps {
   title: string;
   tasks: Task[];
   onToggleTask: (id: string) => void;
+  onEditTask: (task: Task) => void;
   type: "todo" | "done";
 }
 
-export const TaskColumn = ({ title, tasks, onToggleTask, type }: TaskColumnProps) => {
+export const TaskColumn = ({ title, tasks, onToggleTask, onEditTask, type }: TaskColumnProps) => {
   return (
     <div className="flex-1 min-w-0">
       <div className="flex items-center gap-3 mb-4">
@@ -41,6 +42,7 @@ export const TaskColumn = ({ title, tasks, onToggleTask, type }: TaskColumnProps
               key={task.id}
               task={task}
               onToggle={onToggleTask}
+              onEdit={onEditTask}
             />
           ))
         )}
