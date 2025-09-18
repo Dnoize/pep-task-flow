@@ -2,6 +2,13 @@ import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
+import {
+  useSortable,
+} from '@dnd-kit/sortable';
+import {
+  CSS,
+} from '@dnd-kit/utilities';
+import { GripVertical } from "lucide-react";
 
 export type Priority = "low" | "medium" | "high";
 
@@ -23,6 +30,20 @@ interface TaskCardProps {
 
 export const TaskCard = ({ task, onToggle, onEdit }: TaskCardProps) => {
   const [isAnimating, setIsAnimating] = useState(false);
+  
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({id: task.id});
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
 
   const handleToggle = () => {
     setIsAnimating(true);
@@ -58,19 +79,31 @@ export const TaskCard = ({ task, onToggle, onEdit }: TaskCardProps) => {
   };
 
   return (
-    <Card className={cn(
-      "p-4 transition-all duration-300 ease-in-out shadow-card hover:shadow-vibrant cursor-pointer",
-      "bg-gradient-card border-border/50",
-      isAnimating && "scale-95 opacity-75",
-      task.completed && "bg-gradient-success shadow-success"
-    )}>
+    <Card 
+      ref={setNodeRef} 
+      style={style} 
+      className={cn(
+        "p-4 transition-all duration-300 ease-in-out shadow-card hover:shadow-vibrant",
+        "bg-gradient-card border-border/50",
+        isAnimating && "scale-95 opacity-75",
+        task.completed && "bg-gradient-success shadow-success",
+        isDragging && "opacity-50 scale-95 z-50"
+      )}
+    >
       <div className="flex items-start gap-3">
+        <div 
+          className="cursor-grab active:cursor-grabbing mt-1 opacity-40 hover:opacity-80 transition-opacity"
+          {...attributes}
+          {...listeners}
+        >
+          <GripVertical className="h-4 w-4 text-muted-foreground" />
+        </div>
         <Checkbox
           checked={task.completed}
           onCheckedChange={handleToggle}
           className="mt-1 data-[state=checked]:bg-success data-[state=checked]:border-success"
         />
-        <div className="flex-1 min-w-0" onClick={() => onEdit(task)}>
+        <div className="flex-1 min-w-0 cursor-pointer" onClick={() => onEdit(task)}>
           <div className="flex items-start justify-between gap-2 mb-2">
             <p className={cn(
               "text-sm font-medium leading-relaxed transition-all duration-200",

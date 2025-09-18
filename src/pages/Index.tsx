@@ -4,11 +4,43 @@ import { TaskColumn } from "@/components/TaskColumn";
 import { TaskEditDialog } from "@/components/TaskEditDialog";
 import { Task, Priority } from "@/components/TaskCard";
 import { CheckSquare } from "lucide-react";
+import {
+  DndContext, 
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
 
 const Index = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const sortTasksByPriority = (tasks: Task[]) => {
+    const priorityOrder = { high: 0, medium: 1, low: 2 };
+    return [...tasks].sort((a, b) => {
+      if (a.completed !== b.completed) {
+        return a.completed ? 1 : -1;
+      }
+      return priorityOrder[a.priority] - priorityOrder[b.priority];
+    });
+  };
 
   const addTask = (title: string, description?: string, priority: Priority = "medium") => {
     const newTask: Task = {
@@ -19,7 +51,8 @@ const Index = () => {
       completed: false,
       createdAt: new Date(),
     };
-    setTasks([newTask, ...tasks]);
+    const updatedTasks = [newTask, ...tasks];
+    setTasks(sortTasksByPriority(updatedTasks));
   };
 
   const toggleTask = (id: string) => {
@@ -40,9 +73,50 @@ const Index = () => {
   };
 
   const handleSaveTask = (updatedTask: Task) => {
-    setTasks(tasks.map(task => 
+    const updatedTasks = tasks.map(task => 
       task.id === updatedTask.id ? updatedTask : task
-    ));
+    );
+    setTasks(sortTasksByPriority(updatedTasks));
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    
+    if (!over) return;
+
+    const activeId = active.id;
+    const overId = over.id;
+    
+    if (activeId === overId) return;
+
+    const activeTask = tasks.find(task => task.id === activeId);
+    if (!activeTask) return;
+
+    // If dropping on a column (todo/done)
+    if (overId === 'todo' || overId === 'done') {
+      const shouldComplete = overId === 'done';
+      if (activeTask.completed !== shouldComplete) {
+        const updatedTasks = tasks.map(task => 
+          task.id === activeId 
+            ? { 
+                ...task, 
+                completed: shouldComplete,
+                completedAt: shouldComplete ? new Date() : undefined
+              }
+            : task
+        );
+        setTasks(sortTasksByPriority(updatedTasks));
+      }
+      return;
+    }
+
+    // Reordering within the same list
+    const oldIndex = tasks.findIndex(task => task.id === activeId);
+    const newIndex = tasks.findIndex(task => task.id === overId);
+    
+    if (oldIndex !== -1 && newIndex !== -1) {
+      setTasks(arrayMove(tasks, oldIndex, newIndex));
+    }
   };
 
   const handleCloseDialog = () => {
@@ -50,8 +124,9 @@ const Index = () => {
     setEditingTask(null);
   };
 
-  const todoTasks = tasks.filter(task => !task.completed);
-  const doneTasks = tasks.filter(task => task.completed);
+  const sortedTasks = sortTasksByPriority(tasks);
+  const todoTasks = sortedTasks.filter(task => !task.completed);
+  const doneTasks = sortedTasks.filter(task => task.completed);
 
   const today = new Date().toLocaleDateString('fr-FR', {
     weekday: 'long',
@@ -61,9 +136,14 @@ const Index = () => {
   });
 
   return (
-    <div className="min-h-screen bg-background p-4">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
+    <DndContext 
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragEnd={handleDragEnd}
+    >
+      <div className="min-h-screen bg-background p-4">
+        <div className="max-w-6xl mx-auto">
+          {/* Header */}
         <header className="text-center mb-8">
           <div className="flex items-center justify-center gap-3 mb-4">
             <div className="p-3 rounded-2xl bg-gradient-primary shadow-vibrant">
@@ -121,8 +201,9 @@ const Index = () => {
             </div>
           </div>
         </div>
+        </div>
       </div>
-    </div>
+    </DndContext>
   );
 };
 
