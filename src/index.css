@@ -175,10 +175,81 @@ All colors MUST be HSL.
   }
 }
 
+@keyframes confettiExplosion {
+  0% {
+    transform: scale(1) rotate(0deg);
+    box-shadow: 
+      0 0 0 0 hsl(280 100% 70% / 0.8),
+      0 0 0 0 hsl(25 100% 60% / 0.8),
+      0 0 0 0 hsl(120 65% 50% / 0.8),
+      0 0 0 0 hsl(320 85% 75% / 0.8);
+  }
+  25% {
+    transform: scale(1.15) rotate(5deg);
+    box-shadow: 
+      10px -15px 0 5px hsl(280 100% 70% / 0.6),
+      -12px -10px 0 3px hsl(25 100% 60% / 0.6),
+      15px 8px 0 4px hsl(120 65% 50% / 0.6),
+      -8px 12px 0 6px hsl(320 85% 75% / 0.6);
+  }
+  50% {
+    transform: scale(1.25) rotate(-3deg);
+    box-shadow: 
+      20px -25px 0 8px hsl(280 100% 70% / 0.4),
+      -22px -18px 0 6px hsl(25 100% 60% / 0.4),
+      28px 15px 0 7px hsl(120 65% 50% / 0.4),
+      -15px 20px 0 9px hsl(320 85% 75% / 0.4);
+  }
+  75% {
+    transform: scale(1.1) rotate(2deg);
+    box-shadow: 
+      30px -35px 0 4px hsl(280 100% 70% / 0.2),
+      -32px -28px 0 3px hsl(25 100% 60% / 0.2),
+      38px 25px 0 5px hsl(120 65% 50% / 0.2),
+      -25px 30px 0 6px hsl(320 85% 75% / 0.2);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    box-shadow: 
+      40px -45px 0 0 hsl(280 100% 70% / 0),
+      -42px -38px 0 0 hsl(25 100% 60% / 0),
+      48px 35px 0 0 hsl(120 65% 50% / 0),
+      -35px 40px 0 0 hsl(320 85% 75% / 0);
+  }
+}
+
+@keyframes celebrationPulse {
+  0%, 100% {
+    background: linear-gradient(145deg, hsl(0 0% 100%), hsl(230 25% 98%));
+  }
+  20% {
+    background: linear-gradient(145deg, hsl(280 100% 95%), hsl(320 85% 95%));
+  }
+  40% {
+    background: linear-gradient(145deg, hsl(25 100% 95%), hsl(280 100% 95%));
+  }
+  60% {
+    background: linear-gradient(145deg, hsl(120 65% 95%), hsl(25 100% 95%));
+  }
+  80% {
+    background: linear-gradient(145deg, hsl(320 85% 95%), hsl(120 65% 95%));
+  }
+}
+
 .animate-checkmark {
   animation: checkmark 0.5s ease-in-out;
 }
 
 .animate-task-complete {
   animation: taskComplete 0.6s ease-in-out;
+}
+
+.animate-confetti-explosion {
+  animation: confettiExplosion 1.2s ease-out, celebrationPulse 1.2s ease-out;
+  position: relative;
+  overflow: visible;
+}
+
+.celebration-text {
+  animation: checkmark 0.8s ease-out 0.3s both;
 }

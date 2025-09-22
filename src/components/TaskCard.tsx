@@ -31,6 +31,7 @@ interface TaskCardProps {
 export const TaskCard = ({ task, onToggle, onEdit }: TaskCardProps) => {
   const [isAnimating, setIsAnimating] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
+  const [showCelebration, setShowCelebration] = useState(false);
   
   const {
     attributes,
@@ -49,14 +50,16 @@ export const TaskCard = ({ task, onToggle, onEdit }: TaskCardProps) => {
   const handleToggle = () => {
     if (!task.completed) {
       setIsCompleting(true);
+      setShowCelebration(true);
       setTimeout(() => {
         setIsAnimating(true);
         setTimeout(() => {
           onToggle(task.id);
           setIsAnimating(false);
           setIsCompleting(false);
+          setTimeout(() => setShowCelebration(false), 500);
         }, 300);
-      }, 600);
+      }, 1200);
     } else {
       setIsAnimating(true);
       setTimeout(() => {
@@ -92,18 +95,26 @@ export const TaskCard = ({ task, onToggle, onEdit }: TaskCardProps) => {
   };
 
   return (
-    <Card 
-      ref={setNodeRef} 
-      style={style} 
-      className={cn(
-        "p-4 transition-all duration-300 ease-in-out shadow-card hover:shadow-vibrant",
-        "bg-gradient-card border-border/50",
-        isAnimating && "scale-95 opacity-75",
-        isCompleting && "animate-task-complete",
-        task.completed && "bg-gradient-success shadow-success",
-        isDragging && "opacity-50 scale-95 z-50"
-      )}
-    >
+    <div className="relative">
+      <Card 
+        ref={setNodeRef} 
+        style={style} 
+        className={cn(
+          "p-4 transition-all duration-300 ease-in-out shadow-card hover:shadow-vibrant",
+          "bg-gradient-card border-border/50",
+          isAnimating && "scale-95 opacity-75",
+          isCompleting && "animate-confetti-explosion",
+          task.completed && "bg-gradient-success shadow-success",
+          isDragging && "opacity-50 scale-95 z-50"
+        )}
+      >
+        {showCelebration && (
+          <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 z-10">
+            <div className="celebration-text bg-gradient-to-r from-purple-600 to-pink-600 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
+              🎉 Bravo! 🎉
+            </div>
+          </div>
+        )}
       <div className="flex items-start gap-3">
         <div 
           className="cursor-grab active:cursor-grabbing mt-1 opacity-40 hover:opacity-80 transition-opacity"
@@ -160,8 +171,9 @@ export const TaskCard = ({ task, onToggle, onEdit }: TaskCardProps) => {
               </span>
             )}
           </div>
+          </div>
         </div>
-      </div>
-    </Card>
+      </Card>
+    </div>
   );
 };
