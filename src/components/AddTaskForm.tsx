@@ -39,7 +39,7 @@ export const AddTaskForm = ({ onAdd }: AddTaskFormProps) => {
           />
           <Button 
             type="submit" 
-            className="bg-gradient-primary text-primary-foreground shadow-vibrant hover:shadow-lg transition-all duration-200"
+            className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
             disabled={!title.trim()}
           >
             <Plus className="h-4 w-4" />

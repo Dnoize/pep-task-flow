@@ -77,9 +77,9 @@ export const TaskCard = ({ task, onToggle, onEdit }: TaskCardProps) => {
 
   const getPriorityColor = (priority: Priority) => {
     switch (priority) {
-      case "high": return "bg-destructive/20 text-destructive border-destructive/30";
-      case "medium": return "bg-warning/20 text-warning border-warning/30";
-      case "low": return "bg-muted-foreground/20 text-muted-foreground border-muted-foreground/30";
+      case "high": return "bg-gradient-to-r from-red-400/20 to-orange-400/20 text-red-600 border-red-400/40";
+      case "medium": return "bg-gradient-to-r from-purple-400/20 to-pink-400/20 text-purple-600 border-purple-400/40";
+      case "low": return "bg-gradient-to-r from-green-400/20 to-teal-400/20 text-green-600 border-green-400/40";
     }
   };
 
