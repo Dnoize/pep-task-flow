@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -18,6 +18,14 @@ export const TaskEditDialog = ({ task, open, onClose, onSave }: TaskEditDialogPr
   const [title, setTitle] = useState(task?.title || "");
   const [description, setDescription] = useState(task?.description || "");
   const [priority, setPriority] = useState<Priority>(task?.priority || "medium");
+
+  useEffect(() => {
+    if (task) {
+      setTitle(task.title);
+      setDescription(task.description || "");
+      setPriority(task.priority);
+    }
+  }, [task]);
 
   const handleSave = () => {
     if (!task || !title.trim()) return;

@@ -158,6 +158,21 @@ const Index = () => {
           </p>
         </header>
 
+        {/* Stats */}
+        <div className="mb-8 text-center">
+          <div className="inline-flex items-center gap-6 px-6 py-3 rounded-2xl bg-gradient-card shadow-card">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-todo">{todoTasks.length}</div>
+              <div className="text-xs text-muted-foreground">À faire</div>
+            </div>
+            <div className="w-px h-8 bg-border"></div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-done">{doneTasks.length}</div>
+              <div className="text-xs text-muted-foreground">Terminées</div>
+            </div>
+          </div>
+        </div>
+
         {/* Add Task Form */}
         <AddTaskForm onAdd={addTask} />
 
@@ -187,20 +202,6 @@ const Index = () => {
           onSave={handleSaveTask}
         />
 
-        {/* Stats */}
-        <div className="mt-8 text-center">
-          <div className="inline-flex items-center gap-6 px-6 py-3 rounded-2xl bg-gradient-card shadow-card">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-primary">{todoTasks.length}</div>
-              <div className="text-xs text-muted-foreground">À faire</div>
-            </div>
-            <div className="w-px h-8 bg-border"></div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-success">{doneTasks.length}</div>
-              <div className="text-xs text-muted-foreground">Terminées</div>
-            </div>
-          </div>
-        </div>
         </div>
       </div>
     </DndContext>
