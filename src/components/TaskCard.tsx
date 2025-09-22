@@ -30,6 +30,7 @@ interface TaskCardProps {
 
 export const TaskCard = ({ task, onToggle, onEdit }: TaskCardProps) => {
   const [isAnimating, setIsAnimating] = useState(false);
+  const [isCompleting, setIsCompleting] = useState(false);
   
   const {
     attributes,
@@ -46,11 +47,23 @@ export const TaskCard = ({ task, onToggle, onEdit }: TaskCardProps) => {
   };
 
   const handleToggle = () => {
-    setIsAnimating(true);
-    setTimeout(() => {
-      onToggle(task.id);
-      setIsAnimating(false);
-    }, 300);
+    if (!task.completed) {
+      setIsCompleting(true);
+      setTimeout(() => {
+        setIsAnimating(true);
+        setTimeout(() => {
+          onToggle(task.id);
+          setIsAnimating(false);
+          setIsCompleting(false);
+        }, 300);
+      }, 600);
+    } else {
+      setIsAnimating(true);
+      setTimeout(() => {
+        onToggle(task.id);
+        setIsAnimating(false);
+      }, 300);
+    }
   };
 
   const formatDate = (date: Date) => {
@@ -86,6 +99,7 @@ export const TaskCard = ({ task, onToggle, onEdit }: TaskCardProps) => {
         "p-4 transition-all duration-300 ease-in-out shadow-card hover:shadow-vibrant",
         "bg-gradient-card border-border/50",
         isAnimating && "scale-95 opacity-75",
+        isCompleting && "animate-task-complete",
         task.completed && "bg-gradient-success shadow-success",
         isDragging && "opacity-50 scale-95 z-50"
       )}
@@ -101,7 +115,10 @@ export const TaskCard = ({ task, onToggle, onEdit }: TaskCardProps) => {
         <Checkbox
           checked={task.completed}
           onCheckedChange={handleToggle}
-          className="mt-1 data-[state=checked]:bg-success data-[state=checked]:border-success"
+          className={cn(
+            "mt-1 data-[state=checked]:bg-success data-[state=checked]:border-success transition-all duration-300",
+            isCompleting && "animate-checkmark"
+          )}
         />
         <div className="flex-1 min-w-0 cursor-pointer" onClick={() => onEdit(task)}>
           <div className="flex items-start justify-between gap-2 mb-2">

@@ -17,16 +17,16 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 230 15% 15%;
 
-    --primary: 186 84% 11%;
+    --primary: 183 100% 10%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 186 48% 60%;
+    --secondary: 184 47% 61%;
     --secondary-foreground: 0 0% 100%;
 
-    --todo: 328 89% 44%;
+    --todo: 338 94% 43%;
     --todo-foreground: 0 0% 100%;
 
-    --done: 204 78% 53%;
+    --done: 203 86% 55%;
     --done-foreground: 0 0% 100%;
 
     --muted: 230 25% 90%;
@@ -48,13 +48,16 @@ All colors MUST be HSL.
     --warning: 38 92% 50%;
     --warning-foreground: 48 96% 89%;
 
-    --gradient-primary: linear-gradient(135deg, hsl(186 84% 11%), hsl(186 48% 60%));
-    --gradient-success: linear-gradient(135deg, hsl(142 71% 45%), hsl(195 100% 50%));
+    --gradient-primary: linear-gradient(135deg, hsl(183 100% 10%), hsl(184 47% 61%));
+    --gradient-success: linear-gradient(135deg, hsl(203 86% 55%), hsl(184 47% 61%));
     --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(230 25% 98%));
     
-    --shadow-vibrant: 0 10px 30px -5px hsl(186 48% 60% / 0.3);
+    --shadow-vibrant: 0 10px 30px -5px hsl(184 47% 61% / 0.3);
     --shadow-card: 0 4px 20px -2px hsl(230 25% 20% / 0.08);
-    --shadow-success: 0 8px 25px -8px hsl(142 71% 45% / 0.4);
+    --shadow-success: 0 8px 25px -8px hsl(203 86% 55% / 0.4);
+    
+    --animation-bounce: bounce 0.6s ease-in-out;
+    --animation-checkmark: checkmark 0.5s ease-in-out;
 
     --radius: 0.75rem;
 
@@ -128,4 +131,45 @@ All colors MUST be HSL.
   body {
     @apply bg-background text-foreground;
   }
+}
+
+@keyframes checkmark {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes taskComplete {
+  0% {
+    transform: scale(1) rotate(0deg);
+  }
+  25% {
+    transform: scale(1.05) rotate(2deg);
+  }
+  50% {
+    transform: scale(1.1) rotate(-2deg);
+  }
+  75% {
+    transform: scale(1.05) rotate(1deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+.animate-checkmark {
+  animation: checkmark 0.5s ease-in-out;
+}
+
+.animate-task-complete {
+  animation: taskComplete 0.6s ease-in-out;
 }
