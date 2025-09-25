@@ -33,16 +33,16 @@ export const TaskColumn = ({ title, tasks, onToggleTask, onEditTask, onSubTaskTo
         <h2 className={cn(
           "text-xl font-bold",
           type === "todo" 
-            ? "bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent" 
-            : "bg-gradient-to-r from-green-500 to-teal-600 bg-clip-text text-transparent"
+            ? "text-secondary" /* Violet pour "À faire" */
+            : "text-success" /* Vert pour "Terminées" */
         )}>
           {title}
         </h2>
         <Badge variant={type === "todo" ? "default" : "secondary"} className={cn(
           "text-xs font-medium shadow-sm",
           type === "todo" 
-            ? "bg-gradient-to-r from-pink-100 to-purple-100 text-purple-700 border-purple-200" 
-            : "bg-gradient-to-r from-green-100 to-teal-100 text-teal-700 border-teal-200"
+            ? "bg-secondary/20 text-secondary border-secondary/40" 
+            : "bg-success/20 text-success border-success/40"
         )}>
           {tasks.length}
         </Badge>
@@ -51,8 +51,8 @@ export const TaskColumn = ({ title, tasks, onToggleTask, onEditTask, onSubTaskTo
       <div className={cn(
         "space-y-3 min-h-[200px] transition-colors duration-200 rounded-lg p-2",
         isOver && (type === "todo" 
-          ? "bg-gradient-to-br from-pink-50 to-purple-50 border-2 border-dashed border-purple-300/50" 
-          : "bg-gradient-to-br from-green-50 to-teal-50 border-2 border-dashed border-teal-300/50")
+          ? "bg-secondary/10 border-2 border-dashed border-secondary/30" 
+          : "bg-success/10 border-2 border-dashed border-success/30")
       )}>
         {tasks.length === 0 ? (
           <Card className="p-8 text-center bg-muted/30 border-dashed border-2 border-muted">

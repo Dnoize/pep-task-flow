@@ -159,32 +159,25 @@ const Index = () => {
     >
       <div className="min-h-screen bg-background p-4">
         <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <header className="text-center mb-8">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="p-3 rounded-2xl bg-gradient-to-br from-purple-500 via-pink-500 to-orange-400 shadow-festive animate-pulse">
-              <CheckSquare className="h-8 w-8 text-white" />
-            </div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 via-pink-500 to-orange-500 bg-clip-text text-transparent">
-              Ma Todo List
-            </h1>
-          </div>
-          <p className="text-muted-foreground text-lg capitalize">
-            {today}
+        <div className="text-center mb-8">
+          <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
+            Ma Todo List
+          </h1>
+          <p className="text-muted-foreground mb-4">
+            Organisez vos tâches de manière efficace et motivante
           </p>
-        </header>
-
-        {/* Stats */}
-        <div className="mb-8 text-center">
-          <div className="inline-flex items-center gap-6 px-6 py-3 rounded-2xl bg-gradient-to-r from-white/90 via-purple-50/90 to-pink-50/90 shadow-card border border-purple-200/30">
-            <div className="text-center">
-              <div className="text-2xl font-bold bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent">{todoTasks.length}</div>
-              <div className="text-xs text-purple-600 font-medium">À faire</div>
+          
+          {/* Barre de progression globale */}
+          <div className="max-w-md mx-auto mb-6">
+            <div className="flex justify-between text-sm text-muted-foreground mb-2">
+              <span>Progression</span>
+              <span>{tasks.length > 0 ? Math.round((doneTasks.length / tasks.length) * 100) : 0}%</span>
             </div>
-            <div className="w-px h-8 bg-gradient-to-b from-purple-300 to-pink-300"></div>
-            <div className="text-center">
-              <div className="text-2xl font-bold bg-gradient-to-r from-green-500 to-teal-600 bg-clip-text text-transparent">{doneTasks.length}</div>
-              <div className="text-xs text-teal-600 font-medium">Terminées</div>
+            <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+              <div 
+                className="h-full bg-gradient-to-r from-primary to-success transition-all duration-500 ease-out"
+                style={{ width: `${tasks.length > 0 ? (doneTasks.length / tasks.length) * 100 : 0}%` }}
+              ></div>
             </div>
           </div>
         </div>

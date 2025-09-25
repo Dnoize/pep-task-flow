@@ -88,9 +88,9 @@ export const TaskCard = ({ task, onToggle, onEdit, onSubTaskToggle }: TaskCardPr
 
   const getPriorityColor = (priority: Priority) => {
     switch (priority) {
-      case "high": return "bg-gradient-to-r from-red-400/20 to-orange-400/20 text-red-600 border-red-400/40";
-      case "medium": return "bg-gradient-to-r from-purple-400/20 to-pink-400/20 text-purple-600 border-purple-400/40";
-      case "low": return "bg-gradient-to-r from-green-400/20 to-teal-400/20 text-green-600 border-green-400/40";
+      case "high": return "bg-accent/20 text-accent border-accent/40"; /* Orange vif */
+      case "medium": return "bg-info/20 text-info border-info/40"; /* Turquoise */
+      case "low": return "bg-sage/20 text-sage border-sage/40"; /* Vert sauge */
     }
   };
 
@@ -165,22 +165,32 @@ export const TaskCard = ({ task, onToggle, onEdit, onSubTaskToggle }: TaskCardPr
           )}
 
           {task.subTasks && task.subTasks.length > 0 && (
-            <div className="mb-3 space-y-1">
+            <div className="mb-3 space-y-2 p-2 bg-muted/30 rounded-md border border-border/50">
+              <div className="text-xs font-medium text-muted-foreground mb-1">
+                Sous-tâches ({task.subTasks.filter(st => st.completed).length}/{task.subTasks.length})
+              </div>
               {task.subTasks.map((subTask) => (
-                <div key={subTask.id} className="flex items-center gap-2 py-1">
+                <div key={subTask.id} className="flex items-center gap-2 py-1 group">
                   <Checkbox
                     checked={subTask.completed}
                     onCheckedChange={() => onSubTaskToggle(task.id, subTask.id)}
                     className="h-3 w-3 data-[state=checked]:bg-success data-[state=checked]:border-success"
                   />
                   <span className={cn(
-                    "text-xs flex-1",
+                    "text-xs flex-1 cursor-pointer",
                     subTask.completed 
-                      ? "text-success-foreground line-through opacity-70" 
-                      : "text-muted-foreground"
+                      ? "text-success line-through opacity-70" 
+                      : "text-card-foreground hover:text-primary transition-colors"
                   )}>
                     {subTask.text}
                   </span>
+                  <div className="w-4 h-4 rounded-full flex items-center justify-center transition-colors">
+                    {subTask.completed ? (
+                      <div className="w-2 h-2 bg-success rounded-full"></div>
+                    ) : (
+                      <div className="w-2 h-2 border border-muted-foreground/30 rounded-full group-hover:border-primary/50"></div>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>

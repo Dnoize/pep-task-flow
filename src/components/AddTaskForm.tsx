@@ -37,11 +37,11 @@ export const AddTaskForm = ({ onAdd }: AddTaskFormProps) => {
             placeholder="Ajouter une nouvelle tâche..."
             className="flex-1 border-input bg-background/50 focus:ring-primary focus:border-primary"
           />
-          <Button 
-            type="submit" 
-            className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
-            disabled={!title.trim()}
-          >
+        <Button 
+          type="submit" 
+          disabled={!title.trim()}
+          className="bg-gradient-to-r from-info to-accent hover:from-info/90 hover:to-accent/90 text-white font-medium shadow-lg hover:shadow-xl transition-all duration-300"
+        >
             <Plus className="h-4 w-4" />
           </Button>
         </div>
