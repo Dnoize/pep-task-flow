@@ -124,6 +124,22 @@ const Index = () => {
     setEditingTask(null);
   };
 
+  const handleSubTaskToggle = (taskId: string, subTaskId: string) => {
+    setTasks(tasks.map(task => {
+      if (task.id === taskId && task.subTasks) {
+        return {
+          ...task,
+          subTasks: task.subTasks.map(subTask =>
+            subTask.id === subTaskId
+              ? { ...subTask, completed: !subTask.completed }
+              : subTask
+          )
+        };
+      }
+      return task;
+    }));
+  };
+
   const sortedTasks = sortTasksByPriority(tasks);
   const todoTasks = sortedTasks.filter(task => !task.completed);
   const doneTasks = sortedTasks.filter(task => task.completed);
@@ -183,6 +199,7 @@ const Index = () => {
             tasks={todoTasks}
             onToggleTask={toggleTask}
             onEditTask={handleEditTask}
+            onSubTaskToggle={handleSubTaskToggle}
             type="todo"
           />
           <TaskColumn
@@ -190,6 +207,7 @@ const Index = () => {
             tasks={doneTasks}
             onToggleTask={toggleTask}
             onEditTask={handleEditTask}
+            onSubTaskToggle={handleSubTaskToggle}
             type="done"
           />
         </div>

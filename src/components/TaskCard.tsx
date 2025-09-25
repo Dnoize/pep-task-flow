@@ -12,6 +12,12 @@ import { GripVertical } from "lucide-react";
 
 export type Priority = "low" | "medium" | "high";
 
+export interface SubTask {
+  id: string;
+  text: string;
+  completed: boolean;
+}
+
 export interface Task {
   id: string;
   title: string;
@@ -20,15 +26,17 @@ export interface Task {
   completed: boolean;
   createdAt: Date;
   completedAt?: Date;
+  subTasks?: SubTask[];
 }
 
 interface TaskCardProps {
   task: Task;
   onToggle: (id: string) => void;
   onEdit: (task: Task) => void;
+  onSubTaskToggle: (taskId: string, subTaskId: string) => void;
 }
 
-export const TaskCard = ({ task, onToggle, onEdit }: TaskCardProps) => {
+export const TaskCard = ({ task, onToggle, onEdit, onSubTaskToggle }: TaskCardProps) => {
   const [isAnimating, setIsAnimating] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
@@ -154,6 +162,28 @@ export const TaskCard = ({ task, onToggle, onEdit }: TaskCardProps) => {
             )}>
               {task.description}
             </p>
+          )}
+
+          {task.subTasks && task.subTasks.length > 0 && (
+            <div className="mb-3 space-y-1">
+              {task.subTasks.map((subTask) => (
+                <div key={subTask.id} className="flex items-center gap-2 py-1">
+                  <Checkbox
+                    checked={subTask.completed}
+                    onCheckedChange={() => onSubTaskToggle(task.id, subTask.id)}
+                    className="h-3 w-3 data-[state=checked]:bg-success data-[state=checked]:border-success"
+                  />
+                  <span className={cn(
+                    "text-xs flex-1",
+                    subTask.completed 
+                      ? "text-success-foreground line-through opacity-70" 
+                      : "text-muted-foreground"
+                  )}>
+                    {subTask.text}
+                  </span>
+                </div>
+              ))}
+            </div>
           )}
           
           <div className="flex justify-between items-center text-xs">
