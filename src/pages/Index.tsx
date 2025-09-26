@@ -1,9 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AddTaskForm } from "@/components/AddTaskForm";
 import { TaskColumn } from "@/components/TaskColumn";
 import { TaskEditDialog } from "@/components/TaskEditDialog";
+import { HistoryView } from "@/components/HistoryView";
 import { Task, Priority } from "@/components/TaskCard";
-import { CheckSquare } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { storage } from "@/lib/storage";
+import { maintenanceManager } from "@/lib/maintenance";
 import {
   DndContext, 
   closestCenter,
@@ -24,6 +27,41 @@ const Index = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("todo");
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Load tasks from storage on mount
+  useEffect(() => {
+    loadTasks();
+  }, []);
+
+  // Save tasks to storage whenever tasks change
+  useEffect(() => {
+    if (!isLoading && tasks.length >= 0) {
+      storage.saveTasks(tasks);
+    }
+  }, [tasks, isLoading]);
+
+  const loadTasks = async () => {
+    try {
+      setIsLoading(true);
+      await storage.init();
+      const storedTasks = await storage.getAllTasks();
+      
+      // Convert date strings back to Date objects
+      const tasksWithDates = storedTasks.map(task => ({
+        ...task,
+        createdAt: new Date(task.createdAt),
+        completedAt: task.completedAt ? new Date(task.completedAt) : undefined
+      }));
+      
+      setTasks(sortTasksByPriority(tasksWithDates));
+    } catch (error) {
+      console.error('Failed to load tasks:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -142,14 +180,26 @@ const Index = () => {
 
   const sortedTasks = sortTasksByPriority(tasks);
   const todoTasks = sortedTasks.filter(task => !task.completed);
-  const doneTasks = sortedTasks.filter(task => task.completed);
-
-  const today = new Date().toLocaleDateString('fr-FR', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
+  
+  // Only show tasks completed today in "Terminées (Aujourd'hui)"
+  const today = new Date();
+  const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const doneTasks = sortedTasks.filter(task => {
+    if (!task.completed || !task.completedAt) return false;
+    const completedDate = new Date(task.completedAt);
+    return completedDate >= todayStart;
   });
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-lg font-medium text-muted-foreground mb-2">Chargement...</div>
+          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <DndContext 
@@ -159,60 +209,83 @@ const Index = () => {
     >
       <div className="min-h-screen bg-background p-4">
         <div className="max-w-6xl mx-auto">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
-            Ma Todo List
-          </h1>
-          <p className="text-muted-foreground mb-4">
-            Organisez vos tâches de manière efficace et motivante
-          </p>
-          
-          {/* Barre de progression globale */}
-          <div className="max-w-md mx-auto mb-6">
-            <div className="flex justify-between text-sm text-muted-foreground mb-2">
-              <span>Progression</span>
-              <span>{tasks.length > 0 ? Math.round((doneTasks.length / tasks.length) * 100) : 0}%</span>
-            </div>
-            <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
-              <div 
-                className="h-full bg-gradient-to-r from-primary to-success transition-all duration-500 ease-out"
-                style={{ width: `${tasks.length > 0 ? (doneTasks.length / tasks.length) * 100 : 0}%` }}
-              ></div>
+          <div className="text-center mb-8">
+            <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
+              Ma Todo List
+            </h1>
+            <p className="text-muted-foreground mb-4">
+              Organisez vos tâches de manière efficace et motivante
+            </p>
+            
+            {/* Barre de progression globale */}
+            <div className="max-w-md mx-auto mb-6">
+              <div className="flex justify-between text-sm text-muted-foreground mb-2">
+                <span>Progression du jour</span>
+                <span>{tasks.length > 0 ? Math.round((doneTasks.length / tasks.length) * 100) : 0}%</span>
+              </div>
+              <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+                <div 
+                  className="h-full bg-gradient-to-r from-primary to-success transition-all duration-500 ease-out"
+                  style={{ width: `${tasks.length > 0 ? (doneTasks.length / tasks.length) * 100 : 0}%` }}
+                ></div>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Add Task Form */}
-        <AddTaskForm onAdd={addTask} />
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="todo" className="gap-2">
+                À faire 
+                <span className="bg-secondary/20 text-secondary px-2 py-0.5 rounded-full text-xs">
+                  {todoTasks.length}
+                </span>
+              </TabsTrigger>
+              <TabsTrigger value="done" className="gap-2">
+                Terminées (Aujourd'hui)
+                <span className="bg-success/20 text-success px-2 py-0.5 rounded-full text-xs">
+                  {doneTasks.length}
+                </span>
+              </TabsTrigger>
+              <TabsTrigger value="history">
+                Historique
+              </TabsTrigger>
+            </TabsList>
 
-        {/* Task Columns */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <TaskColumn
-            title="À FAIRE"
-            tasks={todoTasks}
-            onToggleTask={toggleTask}
-            onEditTask={handleEditTask}
-            onSubTaskToggle={handleSubTaskToggle}
-            type="todo"
+            <TabsContent value="todo" className="space-y-6">
+              <AddTaskForm onAdd={addTask} />
+              <TaskColumn
+                title="À FAIRE"
+                tasks={todoTasks}
+                onToggleTask={toggleTask}
+                onEditTask={handleEditTask}
+                onSubTaskToggle={handleSubTaskToggle}
+                type="todo"
+              />
+            </TabsContent>
+
+            <TabsContent value="done" className="space-y-6">
+              <TaskColumn
+                title="TERMINÉES (AUJOURD'HUI)"
+                tasks={doneTasks}
+                onToggleTask={toggleTask}
+                onEditTask={handleEditTask}
+                onSubTaskToggle={handleSubTaskToggle}
+                type="done"
+              />
+            </TabsContent>
+
+            <TabsContent value="history" className="space-y-6">
+              <HistoryView onRefresh={loadTasks} />
+            </TabsContent>
+          </Tabs>
+
+          {/* Task Edit Dialog */}
+          <TaskEditDialog
+            task={editingTask}
+            open={isEditDialogOpen}
+            onClose={handleCloseDialog}
+            onSave={handleSaveTask}
           />
-          <TaskColumn
-            title="TERMINÉ"
-            tasks={doneTasks}
-            onToggleTask={toggleTask}
-            onEditTask={handleEditTask}
-            onSubTaskToggle={handleSubTaskToggle}
-            type="done"
-          />
-        </div>
-
-        {/* Task Edit Dialog */}
-        <TaskEditDialog
-          task={editingTask}
-          open={isEditDialogOpen}
-          onClose={handleCloseDialog}
-          onSave={handleSaveTask}
-        />
-
         </div>
       </div>
     </DndContext>
