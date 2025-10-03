@@ -31,29 +31,12 @@ const Index = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("todo");
   const [isLoading, setIsLoading] = useState(true);
-  const [isStuck, setIsStuck] = useState(false);
-  const stickyRef = useRef<HTMLDivElement>(null);
 
   // Load tasks from storage on mount
   useEffect(() => {
     loadTasks();
   }, []);
 
-  // Detect when sticky header is stuck
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setIsStuck(!entry.isIntersecting);
-      },
-      { threshold: [1], rootMargin: '-1px 0px 0px 0px' }
-    );
-
-    if (stickyRef.current) {
-      observer.observe(stickyRef.current);
-    }
-
-    return () => observer.disconnect();
-  }, []);
 
   // Save tasks to storage whenever tasks change
   useEffect(() => {
@@ -228,71 +211,53 @@ const Index = () => {
       onDragEnd={handleDragEnd}
     >
       <div className="min-h-screen bg-background">
-        <div className="max-w-6xl mx-auto">
-          {/* Sentinel for intersection observer */}
-          <div ref={stickyRef} className="h-px" />
-          
-          {/* Sticky header section */}
-          <div className="sticky top-0 z-30 bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60 border-b border-border transition-all duration-300">
-            <div className="p-4">
-              <div className={`text-center transition-all duration-300 ${isStuck ? 'mb-4' : 'mb-8'}`}>
-                <h1 className={`font-bold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent transition-all duration-300 ${isStuck ? 'text-2xl mb-2' : 'text-4xl md:text-5xl mb-4'}`}>
-                  Ma Todo List
-                </h1>
-                {!isStuck && (
-                  <p className="text-muted-foreground mb-4 animate-in fade-in duration-300">
-                    Organisez vos tâches de manière efficace et motivante
-                  </p>
-                )}
-                
-                {/* Barre de progression globale */}
-                <div className={`mx-auto transition-all duration-300 ${isStuck ? 'max-w-sm mb-3' : 'max-w-md mb-6'}`}>
-                  <div className="flex justify-between text-sm text-muted-foreground mb-2">
-                    <span>Progression du jour</span>
-                    <span>{tasks.length > 0 ? Math.round((doneTasks.length / tasks.length) * 100) : 0}%</span>
-                  </div>
-                  <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
-                    <div 
-                      className="h-full bg-gradient-to-r from-primary to-success transition-all duration-500 ease-out"
-                      style={{ width: `${tasks.length > 0 ? (doneTasks.length / tasks.length) * 100 : 0}%` }}
-                    ></div>
-                  </div>
-                </div>
+        <div className="max-w-6xl mx-auto p-4">
+          <div className="text-center mb-8">
+            <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent mb-4">
+              Ma Todo List
+            </h1>
+            <p className="text-muted-foreground mb-4">
+              Organisez vos tâches de manière efficace et motivante
+            </p>
+            
+            {/* Barre de progression globale */}
+            <div className="max-w-md mx-auto mb-6">
+              <div className="flex justify-between text-sm text-muted-foreground mb-2">
+                <span>Progression du jour</span>
+                <span>{tasks.length > 0 ? Math.round((doneTasks.length / tasks.length) * 100) : 0}%</span>
               </div>
-
-              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="grid w-full grid-cols-3 mb-4">
-                  <TabsTrigger value="todo" className="gap-2">
-                    À faire 
-                    <span className="bg-secondary/20 text-secondary px-2 py-0.5 rounded-full text-xs">
-                      {todoTasks.length}
-                    </span>
-                  </TabsTrigger>
-                  <TabsTrigger value="done" className="gap-2">
-                    Terminées (Aujourd'hui)
-                    <span className="bg-success/20 text-success px-2 py-0.5 rounded-full text-xs">
-                      {doneTasks.length}
-                    </span>
-                  </TabsTrigger>
-                  <TabsTrigger value="history">
-                    Historique
-                  </TabsTrigger>
-                </TabsList>
-
-                {/* Add task form - only in todo tab */}
-                {activeTab === "todo" && (
-                  <div className={`transition-all duration-300 ${isStuck ? 'animate-in slide-in-from-top-2 duration-300' : ''}`}>
-                    <AddTaskForm onAdd={addTask} />
-                  </div>
-                )}
-              </Tabs>
+              <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+                <div 
+                  className="h-full bg-gradient-to-r from-primary to-success transition-all duration-500 ease-out"
+                  style={{ width: `${tasks.length > 0 ? (doneTasks.length / tasks.length) * 100 : 0}%` }}
+                ></div>
+              </div>
             </div>
           </div>
 
-          {/* Scrollable content */}
-          <div className="p-4">
+          <div className="space-y-6">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="grid w-full grid-cols-3 mb-6">
+                <TabsTrigger value="todo" className="gap-2">
+                  À faire 
+                  <span className="bg-secondary/20 text-secondary px-2 py-0.5 rounded-full text-xs">
+                    {todoTasks.length}
+                  </span>
+                </TabsTrigger>
+                <TabsTrigger value="done" className="gap-2">
+                  Terminées (Aujourd'hui)
+                  <span className="bg-success/20 text-success px-2 py-0.5 rounded-full text-xs">
+                    {doneTasks.length}
+                  </span>
+                </TabsTrigger>
+                <TabsTrigger value="history">
+                  Historique
+                </TabsTrigger>
+              </TabsList>
+
               <TabsContent value="todo" className="mt-0 space-y-6">
+                <AddTaskForm onAdd={addTask} />
+                
                 <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
                   <div className="space-y-6">
                     <CompletedInlineSummary 
@@ -332,6 +297,7 @@ const Index = () => {
                 <HistoryView onRefresh={loadTasks} />
               </TabsContent>
             </Tabs>
+
           </div>
 
           {/* Task Edit Dialog */}
