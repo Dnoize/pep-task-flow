@@ -20,7 +20,11 @@ export const CompletedInlineSummary = ({
   const hasMore = tasks.length > max;
 
   return (
-    <div className="bg-success/5 border border-success/20 rounded-lg p-4 animate-fade-in">
+    <div 
+      className="lg:hidden bg-success/5 border border-success/20 rounded-xl p-3 animate-fade-in"
+      aria-live="polite"
+      aria-label="Tâches terminées aujourd'hui"
+    >
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <CheckCircle2 className="w-5 h-5 text-success" />
@@ -43,18 +47,21 @@ export const CompletedInlineSummary = ({
           <Badge
             key={task.id}
             variant="outline"
-            className="bg-white border-success/30 text-foreground hover:bg-success/10 transition-colors animate-scale-in"
+            className="bg-white/90 border-success/30 rounded-full px-2.5 py-1 text-xs text-success font-medium hover:bg-success/10 transition-colors animate-scale-in inline-flex items-center gap-1"
           >
+            <CheckCircle2 className="w-3 h-3" />
             {task.title}
           </Badge>
         ))}
         {hasMore && (
-          <Badge
-            variant="outline"
-            className="bg-success/10 border-success/30 text-success"
+          <Button
+            onClick={onViewAll}
+            variant="ghost"
+            size="sm"
+            className="rounded-full border border-success/30 bg-success/10 px-2.5 py-1 h-auto text-xs text-success hover:bg-success/20 focus-visible:ring-2 focus-visible:ring-success"
           >
             +{tasks.length - max} autres
-          </Badge>
+          </Button>
         )}
       </div>
     </div>

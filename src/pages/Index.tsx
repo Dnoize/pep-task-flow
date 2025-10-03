@@ -4,6 +4,7 @@ import { TaskColumn } from "@/components/TaskColumn";
 import { TaskEditDialog } from "@/components/TaskEditDialog";
 import { HistoryView } from "@/components/HistoryView";
 import { CompletedInlineSummary } from "@/components/CompletedInlineSummary";
+import { CompletedSidebar } from "@/components/CompletedSidebar";
 import { Task, Priority } from "@/components/TaskCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { storage } from "@/lib/storage";
@@ -253,20 +254,29 @@ const Index = () => {
             </TabsList>
 
             <TabsContent value="todo" className="space-y-6">
-              <AddTaskForm onAdd={addTask} />
-              <CompletedInlineSummary 
-                tasks={doneTasks} 
-                max={5}
-                onViewAll={() => setActiveTab("done")}
-              />
-              <TaskColumn
-                title="À FAIRE"
-                tasks={todoTasks}
-                onToggleTask={toggleTask}
-                onEditTask={handleEditTask}
-                onSubTaskToggle={handleSubTaskToggle}
-                type="todo"
-              />
+              <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+                <div className="space-y-6">
+                  <AddTaskForm onAdd={addTask} />
+                  <CompletedInlineSummary 
+                    tasks={doneTasks} 
+                    max={5}
+                    onViewAll={() => setActiveTab("done")}
+                  />
+                  <TaskColumn
+                    title="À FAIRE"
+                    tasks={todoTasks}
+                    onToggleTask={toggleTask}
+                    onEditTask={handleEditTask}
+                    onSubTaskToggle={handleSubTaskToggle}
+                    type="todo"
+                  />
+                </div>
+                
+                <CompletedSidebar 
+                  tasks={doneTasks}
+                  onViewAll={() => setActiveTab("done")}
+                />
+              </div>
             </TabsContent>
 
             <TabsContent value="done" className="space-y-6">
