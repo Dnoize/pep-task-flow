@@ -3,6 +3,7 @@ import { AddTaskForm } from "@/components/AddTaskForm";
 import { TaskColumn } from "@/components/TaskColumn";
 import { TaskEditDialog } from "@/components/TaskEditDialog";
 import { HistoryView } from "@/components/HistoryView";
+import { CompletedInlineSummary } from "@/components/CompletedInlineSummary";
 import { Task, Priority } from "@/components/TaskCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { storage } from "@/lib/storage";
@@ -253,6 +254,11 @@ const Index = () => {
 
             <TabsContent value="todo" className="space-y-6">
               <AddTaskForm onAdd={addTask} />
+              <CompletedInlineSummary 
+                tasks={doneTasks} 
+                max={5}
+                onViewAll={() => setActiveTab("done")}
+              />
               <TaskColumn
                 title="À FAIRE"
                 tasks={todoTasks}
