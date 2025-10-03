@@ -13,7 +13,7 @@ export const CompletedSidebar = ({ tasks, onViewAll }: CompletedSidebarProps) =>
 
   return (
     <aside 
-      className="hidden lg:block sticky top-24 max-h-[calc(100vh-140px)] overflow-auto"
+      className="hidden lg:block sticky top-[280px] max-h-[calc(100vh-300px)] overflow-auto"
       role="complementary"
       aria-label="Tâches terminées aujourd'hui"
     >
