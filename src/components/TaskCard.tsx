@@ -47,17 +47,54 @@ export const TaskCard = ({ task, onToggle, onEdit, onSubTaskToggle }: TaskCardPr
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (prefersReducedMotion) return;
 
-    // Balloon inflate sound
-    const inflateSound = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACAgoSGiIqMjpCSlJaYmpyeoKKkpqiqrK6wsrS2uLq8vsDCxMbIyMzO0NLU1tjY2tze4OLi5Obm6Orq7O7u8PLy9Pb2+Pr6/Pz+/v7+/v7+/v7+/Pz6+vj49vb09PLy8O7u7Orq6Ojm5uTi4uDe3Nra2NjW1NTS0M7MzMjIxsTE');
-    inflateSound.volume = 0.3;
-    inflateSound.play().catch(() => {});
+    try {
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      
+      // Balloon inflate sound (whoosh up)
+      const inflateOscillator = audioContext.createOscillator();
+      const inflateGain = audioContext.createGain();
+      
+      inflateOscillator.type = 'sine';
+      inflateOscillator.frequency.setValueAtTime(200, audioContext.currentTime);
+      inflateOscillator.frequency.exponentialRampToValueAtTime(400, audioContext.currentTime + 0.3);
+      
+      inflateGain.gain.setValueAtTime(0, audioContext.currentTime);
+      inflateGain.gain.linearRampToValueAtTime(0.15, audioContext.currentTime + 0.05);
+      inflateGain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+      
+      inflateOscillator.connect(inflateGain);
+      inflateGain.connect(audioContext.destination);
+      
+      inflateOscillator.start(audioContext.currentTime);
+      inflateOscillator.stop(audioContext.currentTime + 0.3);
 
-    // Balloon pop sound after 400ms
-    setTimeout(() => {
-      const popSound = new Audio('data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAABAAgAZGF0YQAAAAA=');
-      popSound.volume = 0.4;
-      popSound.play().catch(() => {});
-    }, 400);
+      // Balloon pop sound (sharp burst)
+      setTimeout(() => {
+        const popContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+        const popOscillator = popContext.createOscillator();
+        const popGain = popContext.createGain();
+        const popFilter = popContext.createBiquadFilter();
+        
+        popOscillator.type = 'square';
+        popOscillator.frequency.setValueAtTime(800, popContext.currentTime);
+        popOscillator.frequency.exponentialRampToValueAtTime(50, popContext.currentTime + 0.1);
+        
+        popFilter.type = 'lowpass';
+        popFilter.frequency.setValueAtTime(2000, popContext.currentTime);
+        
+        popGain.gain.setValueAtTime(0.2, popContext.currentTime);
+        popGain.gain.exponentialRampToValueAtTime(0.01, popContext.currentTime + 0.1);
+        
+        popOscillator.connect(popFilter);
+        popFilter.connect(popGain);
+        popGain.connect(popContext.destination);
+        
+        popOscillator.start(popContext.currentTime);
+        popOscillator.stop(popContext.currentTime + 0.1);
+      }, 400);
+    } catch (error) {
+      console.log('Audio playback not supported');
+    }
   };
   
   const {
