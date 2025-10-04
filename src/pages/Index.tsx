@@ -215,7 +215,7 @@ const Index = () => {
         <div className="max-w-6xl mx-auto p-4">
           <div className="text-center mb-8">
             <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary via-success to-accent bg-clip-text text-transparent mb-4">
-              🎈 Pep Task Flow 🎈
+              🎈 Balloon Tasks 🎈
             </h1>
             <p className="text-muted-foreground mb-4">
               Organisez vos tâches avec légèreté et motivation

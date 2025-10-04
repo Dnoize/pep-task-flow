@@ -42,6 +42,23 @@ export const TaskCard = ({ task, onToggle, onEdit, onSubTaskToggle }: TaskCardPr
   const [isCompleting, setIsCompleting] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
   const [showBalloons, setShowBalloons] = useState(false);
+
+  const playBalloonSounds = () => {
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReducedMotion) return;
+
+    // Balloon inflate sound
+    const inflateSound = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACAgoSGiIqMjpCSlJaYmpyeoKKkpqiqrK6wsrS2uLq8vsDCxMbIyMzO0NLU1tjY2tze4OLi5Obm6Orq7O7u8PLy9Pb2+Pr6/Pz+/v7+/v7+/v7+/Pz6+vj49vb09PLy8O7u7Orq6Ojm5uTi4uDe3Nra2NjW1NTS0M7MzMjIxsTE');
+    inflateSound.volume = 0.3;
+    inflateSound.play().catch(() => {});
+
+    // Balloon pop sound after 400ms
+    setTimeout(() => {
+      const popSound = new Audio('data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAABAAgAZGF0YQAAAAA=');
+      popSound.volume = 0.4;
+      popSound.play().catch(() => {});
+    }, 400);
+  };
   
   const {
     attributes,
@@ -62,6 +79,7 @@ export const TaskCard = ({ task, onToggle, onEdit, onSubTaskToggle }: TaskCardPr
       setIsCompleting(true);
       setShowCelebration(true);
       setShowBalloons(true);
+      playBalloonSounds();
       setTimeout(() => {
         setIsAnimating(true);
         setTimeout(() => {
