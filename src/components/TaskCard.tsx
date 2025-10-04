@@ -9,6 +9,7 @@ import {
   CSS,
 } from '@dnd-kit/utilities';
 import { GripVertical } from "lucide-react";
+import { BalloonBurst } from "./BalloonBurst";
 
 export type Priority = "low" | "medium" | "high";
 
@@ -40,6 +41,7 @@ export const TaskCard = ({ task, onToggle, onEdit, onSubTaskToggle }: TaskCardPr
   const [isAnimating, setIsAnimating] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
+  const [showBalloons, setShowBalloons] = useState(false);
   
   const {
     attributes,
@@ -59,15 +61,19 @@ export const TaskCard = ({ task, onToggle, onEdit, onSubTaskToggle }: TaskCardPr
     if (!task.completed) {
       setIsCompleting(true);
       setShowCelebration(true);
+      setShowBalloons(true);
       setTimeout(() => {
         setIsAnimating(true);
         setTimeout(() => {
           onToggle(task.id);
           setIsAnimating(false);
           setIsCompleting(false);
-          setTimeout(() => setShowCelebration(false), 500);
+          setTimeout(() => {
+            setShowCelebration(false);
+            setShowBalloons(false);
+          }, 500);
         }, 300);
-      }, 1200);
+      }, 600);
     } else {
       setIsAnimating(true);
       setTimeout(() => {
@@ -88,9 +94,9 @@ export const TaskCard = ({ task, onToggle, onEdit, onSubTaskToggle }: TaskCardPr
 
   const getPriorityColor = (priority: Priority) => {
     switch (priority) {
-      case "high": return "bg-accent/20 text-accent border-accent/40"; /* Orange vif */
-      case "medium": return "bg-info/20 text-info border-info/40"; /* Turquoise */
-      case "low": return "bg-sage/20 text-sage border-sage/40"; /* Vert sauge */
+      case "high": return "balloon-chip balloon-chip-high";
+      case "medium": return "balloon-chip balloon-chip-medium";
+      case "low": return "balloon-chip balloon-chip-low";
     }
   };
 
@@ -104,11 +110,13 @@ export const TaskCard = ({ task, onToggle, onEdit, onSubTaskToggle }: TaskCardPr
 
   return (
     <div className="relative">
+      <BalloonBurst show={showBalloons} onComplete={() => setShowBalloons(false)} />
+      
       <Card 
         ref={setNodeRef} 
         style={style} 
         className={cn(
-          "p-4 transition-all duration-300 ease-in-out shadow-card hover:shadow-vibrant",
+          "p-4 transition-all duration-300 ease-in-out shadow-card hover:shadow-balloon rounded-2xl",
           "bg-gradient-card border-border/50",
           isAnimating && "scale-95 opacity-75",
           isCompleting && "animate-confetti-explosion",
@@ -118,8 +126,8 @@ export const TaskCard = ({ task, onToggle, onEdit, onSubTaskToggle }: TaskCardPr
       >
         {showCelebration && (
           <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 z-10">
-            <div className="celebration-text bg-gradient-to-r from-purple-600 to-pink-600 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
-              🎉 Bravo! 🎉
+            <div className="celebration-text bg-gradient-to-r from-primary to-success text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
+              🎈 Bravo! 🎈
             </div>
           </div>
         )}
@@ -148,7 +156,7 @@ export const TaskCard = ({ task, onToggle, onEdit, onSubTaskToggle }: TaskCardPr
               {task.title}
             </p>
             <span className={cn(
-              "px-2 py-1 rounded-full text-xs font-medium border shrink-0",
+              "shrink-0",
               getPriorityColor(task.priority)
             )}>
               {getPriorityLabel(task.priority)}

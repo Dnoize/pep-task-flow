@@ -28,21 +28,21 @@ export const AddTaskForm = ({ onAdd }: AddTaskFormProps) => {
   };
 
   return (
-    <Card className="p-4 mb-6 bg-gradient-card shadow-card border-border/50">
+    <Card className="p-4 mb-6 bg-gradient-card shadow-balloon border-border/50 rounded-2xl">
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="flex gap-3">
           <Input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="Ajouter une nouvelle tâche..."
-            className="flex-1 border-input bg-background/50 focus:ring-primary focus:border-primary"
+            placeholder="🎈 Ajouter une nouvelle tâche..."
+            className="flex-1 border-input bg-background/50 focus:ring-primary focus:border-primary rounded-xl"
           />
         <Button 
           type="submit" 
           disabled={!title.trim()}
-          className="bg-gradient-to-r from-info to-accent hover:from-info/90 hover:to-accent/90 text-white font-medium shadow-lg hover:shadow-xl transition-all duration-300"
+          className="balloon-hover bg-gradient-to-r from-primary to-accent text-white font-medium shadow-lg hover:shadow-balloon transition-all duration-300 rounded-xl w-12 h-11"
         >
-            <Plus className="h-4 w-4" />
+            <Plus className="h-5 w-5" />
           </Button>
         </div>
         
@@ -66,9 +66,24 @@ export const AddTaskForm = ({ onAdd }: AddTaskFormProps) => {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="low">Faible</SelectItem>
-                <SelectItem value="medium">Normal</SelectItem>
-                <SelectItem value="high">Urgent</SelectItem>
+                <SelectItem value="low">
+                  <span className="flex items-center gap-2">
+                    <span className="w-3 h-3 rounded-full bg-muted-foreground/20"></span>
+                    Faible
+                  </span>
+                </SelectItem>
+                <SelectItem value="medium">
+                  <span className="flex items-center gap-2">
+                    <span className="w-3 h-3 rounded-full bg-primary/40"></span>
+                    Normal
+                  </span>
+                </SelectItem>
+                <SelectItem value="high">
+                  <span className="flex items-center gap-2">
+                    <span className="w-3 h-3 rounded-full bg-accent/40"></span>
+                    Urgent
+                  </span>
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>

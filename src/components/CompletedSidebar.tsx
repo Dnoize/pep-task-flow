@@ -20,9 +20,7 @@ export const CompletedSidebar = ({ tasks, onViewAll }: CompletedSidebarProps) =>
       <div className="rounded-2xl border border-success/20 bg-success/5 p-4 shadow-sm">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-success/10 flex items-center justify-center">
-              <CheckCircle2 className="w-5 h-5 text-success" />
-            </div>
+            <div className="text-2xl">🎈</div>
             <div>
               <h3 className="text-sm font-semibold text-success">
                 Terminées

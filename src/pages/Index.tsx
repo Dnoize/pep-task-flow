@@ -5,6 +5,7 @@ import { TaskEditDialog } from "@/components/TaskEditDialog";
 import { HistoryView } from "@/components/HistoryView";
 import { CompletedInlineSummary } from "@/components/CompletedInlineSummary";
 import { CompletedSidebar } from "@/components/CompletedSidebar";
+import { ProgressRibbon } from "@/components/ProgressRibbon";
 import { Task, Priority } from "@/components/TaskCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { storage } from "@/lib/storage";
@@ -213,26 +214,19 @@ const Index = () => {
       <div className="min-h-screen bg-background">
         <div className="max-w-6xl mx-auto p-4">
           <div className="text-center mb-8">
-            <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent mb-4">
-              Ma Todo List
+            <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary via-success to-accent bg-clip-text text-transparent mb-4">
+              🎈 Pep Task Flow 🎈
             </h1>
             <p className="text-muted-foreground mb-4">
-              Organisez vos tâches de manière efficace et motivante
+              Organisez vos tâches avec légèreté et motivation
             </p>
             
-            {/* Barre de progression globale */}
-            <div className="max-w-md mx-auto mb-6">
-              <div className="flex justify-between text-sm text-muted-foreground mb-2">
-                <span>Progression du jour</span>
-                <span>{tasks.length > 0 ? Math.round((doneTasks.length / tasks.length) * 100) : 0}%</span>
-              </div>
-              <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
-                <div 
-                  className="h-full bg-gradient-to-r from-primary to-success transition-all duration-500 ease-out"
-                  style={{ width: `${tasks.length > 0 ? (doneTasks.length / tasks.length) * 100 : 0}%` }}
-                ></div>
-              </div>
-            </div>
+            {/* Balloon ribbon progress bar */}
+            <ProgressRibbon 
+              progress={tasks.length > 0 ? (doneTasks.length / tasks.length) * 100 : 0}
+              totalTasks={tasks.length}
+              completedTasks={doneTasks.length}
+            />
           </div>
 
           <div className="space-y-6">

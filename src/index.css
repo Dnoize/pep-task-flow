@@ -15,25 +15,29 @@ All colors MUST be HSL.
   --popover: 0 0% 100%;
   --popover-foreground: 222 84% 4.9%;
   
-  /* Focus colors - Bleu foncé */
-  --primary: 221 83% 53%; /* #1E3A8A */
-  --primary-foreground: 0 0% 98%;
+  /* Balloon theme colors - Ciel (primary) */
+  --primary: 213 97% 68%; /* #60A5FA */
+  --primary-foreground: 222 84% 4.9%;
   
-  /* Creativity colors - Violet */
-  --secondary: 271 91% 65%; /* #9333EA */
-  --secondary-foreground: 0 0% 98%;
+  /* Balloon theme - Menthe (success) */
+  --secondary: 213 97% 68%; /* Same as primary for consistency */
+  --secondary-foreground: 222 84% 4.9%;
   
-  /* Energy colors - Orange */
-  --accent: 20 91% 48%; /* #F97316 */
-  --accent-foreground: 0 0% 98%;
+  /* Balloon theme - Corail (accent) */
+  --accent: 350 89% 71%; /* #FB7185 */
+  --accent-foreground: 222 84% 4.9%;
   
   /* Success colors - Vert menthe */
-  --success: 153 60% 53%; /* #34D399 */
-  --success-foreground: 0 0% 98%;
+  --success: 158 64% 52%; /* #34D399 */
+  --success-foreground: 222 84% 4.9%;
   
-  /* Clarity colors - Turquoise */
-  --info: 188 78% 41%; /* #06B6D4 */
-  --info-foreground: 0 0% 98%;
+  /* Balloon theme - Jaune (highlight) */
+  --highlight: 48 96% 56%; /* #FACC15 */
+  --highlight-foreground: 222 84% 4.9%;
+  
+  /* Info kept for backward compatibility */
+  --info: 213 97% 68%;
+  --info-foreground: 222 84% 4.9%;
   
   /* Neutral colors */
   --muted: 220 14% 96%; /* #F5F5F5 */
@@ -51,18 +55,20 @@ All colors MUST be HSL.
   
   --radius: 0.75rem;
   
-  /* Custom gradients */
-  --gradient-hero: linear-gradient(90deg, hsl(221 83% 53%), hsl(271 91% 65%), hsl(20 91% 48%));
-  --gradient-button: linear-gradient(135deg, hsl(188 78% 41%), hsl(20 91% 48%));
-  --gradient-progress: linear-gradient(90deg, hsl(221 83% 53%), hsl(153 60% 53%));
+  /* Balloon theme gradients */
+  --gradient-hero: linear-gradient(90deg, hsl(213 97% 68%), hsl(158 64% 52%), hsl(350 89% 71%));
+  --gradient-button: linear-gradient(135deg, hsl(213 97% 68%), hsl(350 89% 71%));
+  --gradient-progress: linear-gradient(90deg, hsl(213 97% 68%), hsl(158 64% 52%));
   --gradient-card: linear-gradient(135deg, hsl(0 0% 100%), hsl(220 14% 98%));
-  --gradient-success: linear-gradient(135deg, hsl(153 60% 53%), hsl(153 60% 63%));
+  --gradient-success: linear-gradient(135deg, hsl(158 64% 52%), hsl(158 64% 62%));
+  --gradient-sky-bg: linear-gradient(180deg, hsl(213 100% 97%), hsl(0 0% 100%));
   
-  /* Custom shadows */
-  --shadow-card: 0 2px 12px -4px hsl(221 83% 53% / 0.08);
-  --shadow-vibrant: 0 8px 25px -8px hsl(271 91% 65% / 0.25);
-  --shadow-success: 0 4px 12px -4px hsl(153 60% 53% / 0.2);
-  --shadow-focus: 0 0 0 3px hsl(221 83% 53% / 0.1);
+  /* Balloon theme shadows - softer */
+  --shadow-card: 0 2px 8px -2px hsl(213 97% 68% / 0.12);
+  --shadow-vibrant: 0 6px 20px -6px hsl(213 97% 68% / 0.2);
+  --shadow-success: 0 4px 12px -4px hsl(158 64% 52% / 0.25);
+  --shadow-focus: 0 0 0 3px hsl(213 97% 68% / 0.15);
+  --shadow-balloon: 0 4px 16px -4px hsl(213 97% 68% / 0.3);
 
   --chart-1: 20 91% 48%;
   --chart-2: 188 78% 41%;
@@ -250,4 +256,68 @@ All colors MUST be HSL.
 
 .celebration-text {
   animation: checkmark 0.8s ease-out 0.3s both;
+}
+
+/* Balloon theme - Global styles */
+@layer components {
+  .balloon-chip {
+    @apply relative rounded-full px-3 py-1.5 text-sm font-medium border-2 transition-all duration-200;
+  }
+  
+  .balloon-chip::after {
+    content: '';
+    position: absolute;
+    bottom: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 6px solid currentColor;
+    opacity: 0.7;
+  }
+
+  .balloon-chip-low {
+    @apply bg-muted border-muted-foreground/20 text-muted-foreground;
+  }
+
+  .balloon-chip-medium {
+    @apply bg-primary/10 border-primary/40 text-primary;
+  }
+
+  .balloon-chip-high {
+    @apply bg-accent/10 border-accent/40 text-accent;
+  }
+}
+
+/* Balloon rise animation */
+@keyframes balloonRise {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  50% {
+    transform: translateY(-30vh) rotate(10deg) translateX(15px);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateY(-60vh) rotate(-5deg) translateX(-10px);
+    opacity: 0;
+  }
+}
+
+.balloon-rise {
+  animation: balloonRise 550ms ease-out forwards;
+}
+
+/* Hover inflation effect */
+@media (prefers-reduced-motion: no-preference) {
+  .balloon-hover {
+    @apply transition-transform duration-200;
+  }
+  
+  .balloon-hover:hover {
+    @apply scale-105 shadow-md;
+  }
 }
