@@ -6,7 +6,7 @@ interface ProgressRibbonProps {
 
 export const ProgressRibbon = ({ progress, totalTasks, completedTasks }: ProgressRibbonProps) => {
   return (
-    <div className="max-w-md mx-auto mb-6">
+    <div className="max-w-md mx-auto mb-6" data-testid="progress-percent">
       <div className="flex justify-between text-sm text-muted-foreground mb-2">
         <span className="flex items-center gap-2">
           <span>🎈</span>

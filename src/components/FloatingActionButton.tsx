@@ -27,6 +27,7 @@ export const FloatingActionButton = ({ onClick, visible = true, className }: Flo
       }}
       aria-label="Ajouter une tâche"
       aria-hidden={!visible}
+      data-testid="fab-add"
     >
       <Plus className="h-6 w-6 text-white" />
     </Button>

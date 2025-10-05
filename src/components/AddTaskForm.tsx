@@ -47,11 +47,13 @@ export const AddTaskForm = ({ onAdd }: AddTaskFormProps) => {
             placeholder="🎈 Ajouter une nouvelle tâche..."
             className="flex-1 border-input bg-background/50 focus:ring-primary focus:border-primary rounded-xl text-base"
             style={{ fontSize: '16px' }}
+            data-testid="composer-input"
           />
         <Button 
           type="submit" 
           disabled={!title.trim()}
           className="balloon-hover bg-gradient-to-r from-primary to-accent text-white font-medium shadow-lg hover:shadow-balloon transition-all duration-300 rounded-xl w-12 h-11"
+          data-testid="composer-add"
         >
             <Plus className="h-5 w-5" />
           </Button>

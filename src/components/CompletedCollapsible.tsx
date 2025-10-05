@@ -24,7 +24,7 @@ export const CompletedCollapsible = ({ tasks, onViewAll }: CompletedCollapsibleP
   const displayTasks = tasks.slice(0, 5);
 
   return (
-    <div className="lg:hidden mb-6 rounded-2xl border border-success/20 bg-success/5 p-4 shadow-sm">
+    <div className="lg:hidden mb-6 rounded-2xl border border-success/20 bg-success/5 p-4 shadow-sm" data-testid="done-today-accordion">
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="w-full flex items-center justify-between mb-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-success rounded-lg p-2 -m-2"

@@ -17,10 +17,13 @@ interface TaskColumnProps {
   onEditTask: (task: Task) => void;
   onSubTaskToggle: (taskId: string, subTaskId: string) => void;
   onDeleteTask?: (id: string) => void;
+  onAddSubTask?: (taskId: string, title: string) => void;
+  onReorderSubTasks?: (taskId: string, oldIndex: number, newIndex: number) => void;
+  onDeleteSubTask?: (taskId: string, subTaskId: string) => void;
   type: "todo" | "done";
 }
 
-export const TaskColumn = ({ title, tasks, onToggleTask, onEditTask, onSubTaskToggle, onDeleteTask, type }: TaskColumnProps) => {
+export const TaskColumn = ({ title, tasks, onToggleTask, onEditTask, onSubTaskToggle, onDeleteTask, onAddSubTask, onReorderSubTasks, onDeleteSubTask, type }: TaskColumnProps) => {
   const {
     setNodeRef,
     isOver,
@@ -54,7 +57,9 @@ export const TaskColumn = ({ title, tasks, onToggleTask, onEditTask, onSubTaskTo
         isOver && (type === "todo" 
           ? "bg-secondary/10 border-2 border-dashed border-secondary/30" 
           : "bg-success/10 border-2 border-dashed border-success/30")
-      )}>
+      )}
+      data-testid={type === "todo" ? "todo-list" : "done-list"}
+      >
         {tasks.length === 0 ? (
           <Card className="p-8 text-center bg-muted/30 border-dashed border-2 border-muted">
             <p className="text-muted-foreground text-sm">
@@ -74,6 +79,9 @@ export const TaskColumn = ({ title, tasks, onToggleTask, onEditTask, onSubTaskTo
                 onEdit={onEditTask}
                 onSubTaskToggle={onSubTaskToggle}
                 onDelete={onDeleteTask}
+                onAddSubTask={onAddSubTask}
+                onReorderSubTasks={onReorderSubTasks}
+                onDeleteSubTask={onDeleteSubTask}
               />
             ))}
           </SortableContext>

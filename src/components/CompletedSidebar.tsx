@@ -16,6 +16,7 @@ export const CompletedSidebar = ({ tasks, onViewAll }: CompletedSidebarProps) =>
       className="hidden lg:block sticky top-24 max-h-[calc(100vh-120px)] overflow-auto"
       role="complementary"
       aria-label="Tâches terminées aujourd'hui"
+      data-testid="done-sidebar"
     >
       <div className="rounded-2xl border border-success/20 bg-success/5 p-4 shadow-sm">
         <div className="flex items-center justify-between mb-4">

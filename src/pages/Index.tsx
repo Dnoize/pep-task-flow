@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef } from "react";
 import { AddTaskForm } from "@/components/AddTaskForm";
 import { TaskColumn } from "@/components/TaskColumn";
 import { TaskEditDialog } from "@/components/TaskEditDialog";
@@ -9,11 +9,12 @@ import { CompletedCollapsible } from "@/components/CompletedCollapsible";
 import { ProgressRibbon } from "@/components/ProgressRibbon";
 import { FloatingActionButton } from "@/components/FloatingActionButton";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
-import { Task, Priority } from "@/components/TaskCard";
+import { CompactAddBar } from "@/components/CompactAddBar";
+import { Task } from "@/components/TaskCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { storage } from "@/lib/storage";
-import { maintenanceManager } from "@/lib/maintenance";
-import { debounce } from "@/lib/debounce";
+import { useTaskStore } from "@/store/taskStore";
+import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
 import {
   DndContext, 
   closestCenter,
@@ -29,40 +30,42 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
+import { useState } from "react";
 
 const Index = () => {
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const { 
+    tasks, 
+    isLoading,
+    loadTasks,
+    addTask,
+    updateTask,
+    toggleTask,
+    requestDeleteTask,
+    undoDelete,
+    toggleSubTask,
+    addSubTask,
+    reorderSubTasks,
+    deleteSubTask,
+    setTasks
+  } = useTaskStore();
+  
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("todo");
-  const [isLoading, setIsLoading] = useState(true);
   const [isHeaderCompact, setIsHeaderCompact] = useState(false);
   const [showFAB, setShowFAB] = useState(true);
+  
   const addTaskRef = useRef<HTMLDivElement>(null);
+  const compactInputRef = useRef<HTMLInputElement>(null);
   const stickyWrapperRef = useRef<HTMLDivElement>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
   
-  // Debounced save function
-  const debouncedSave = useCallback(
-    debounce((tasksToSave: Task[]) => {
-      storage.saveTasks(tasksToSave);
-    }, 200),
-    []
-  );
-
-  // Load tasks from storage on mount
+  // Load tasks on mount
   useEffect(() => {
     loadTasks();
-  }, []);
+  }, [loadTasks]);
 
-
-  // Save tasks to storage with debounce
-  useEffect(() => {
-    if (!isLoading && tasks.length >= 0) {
-      debouncedSave(tasks);
-    }
-  }, [tasks, isLoading, debouncedSave]);
-  
   // Track sticky state with IntersectionObserver
   useEffect(() => {
     const sentinel = sentinelRef.current;
@@ -102,27 +105,6 @@ const Index = () => {
     };
   }, []);
 
-  const loadTasks = async () => {
-    try {
-      setIsLoading(true);
-      await storage.init();
-      const storedTasks = await storage.getAllTasks();
-      
-      // Convert date strings back to Date objects
-      const tasksWithDates = storedTasks.map(task => ({
-        ...task,
-        createdAt: new Date(task.createdAt),
-        completedAt: task.completedAt ? new Date(task.completedAt) : undefined
-      }));
-      
-      setTasks(sortTasksByPriority(tasksWithDates));
-    } catch (error) {
-      console.error('Failed to load tasks:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
@@ -140,42 +122,21 @@ const Index = () => {
     });
   };
 
-  const addTask = (title: string, description?: string, priority: Priority = "medium") => {
-    const newTask: Task = {
-      id: Date.now().toString(),
-      title,
-      description,
-      priority,
-      completed: false,
-      createdAt: new Date(),
-    };
-    const updatedTasks = [newTask, ...tasks];
-    setTasks(sortTasksByPriority(updatedTasks));
-  };
-  
-  const deleteTask = (id: string) => {
-    setTasks(tasks.filter(task => task.id !== id));
-  };
-  
   const handleFABClick = () => {
     setActiveTab("todo");
-    setTimeout(() => {
-      addTaskRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      const input = addTaskRef.current?.querySelector('input');
-      input?.focus();
-    }, 100);
-  };
-
-  const toggleTask = (id: string) => {
-    setTasks(tasks.map(task => 
-      task.id === id 
-        ? { 
-            ...task, 
-            completed: !task.completed,
-            completedAt: !task.completed ? new Date() : undefined
-          }
-        : task
-    ));
+    
+    if (isHeaderCompact && compactInputRef.current) {
+      setTimeout(() => {
+        compactInputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        compactInputRef.current?.focus();
+      }, 100);
+    } else {
+      setTimeout(() => {
+        addTaskRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        const input = addTaskRef.current?.querySelector('input');
+        input?.focus();
+      }, 100);
+    }
   };
 
   const handleEditTask = (task: Task) => {
@@ -188,6 +149,37 @@ const Index = () => {
       task.id === updatedTask.id ? updatedTask : task
     );
     setTasks(sortTasksByPriority(updatedTasks));
+  };
+
+  const handleDeleteTask = (id: string) => {
+    const task = tasks.find(t => t.id === id);
+    if (!task) return;
+    
+    requestDeleteTask(id);
+    
+    // Show toast with undo
+    toast({
+      title: "Tâche supprimée",
+      description: task.title,
+      action: (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            undoDelete(id);
+            toast({
+              title: "Tâche restaurée",
+              description: task.title,
+            });
+          }}
+          className="min-h-[44px] min-w-[80px]"
+          data-testid="toast-undo"
+        >
+          Annuler
+        </Button>
+      ),
+      duration: 3000,
+    });
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -207,16 +199,7 @@ const Index = () => {
     if (overId === 'todo' || overId === 'done') {
       const shouldComplete = overId === 'done';
       if (activeTask.completed !== shouldComplete) {
-        const updatedTasks = tasks.map(task => 
-          task.id === activeId 
-            ? { 
-                ...task, 
-                completed: shouldComplete,
-                completedAt: shouldComplete ? new Date() : undefined
-              }
-            : task
-        );
-        setTasks(sortTasksByPriority(updatedTasks));
+        toggleTask(activeId as string);
       }
       return;
     }
@@ -226,7 +209,8 @@ const Index = () => {
     const newIndex = tasks.findIndex(task => task.id === overId);
     
     if (oldIndex !== -1 && newIndex !== -1) {
-      setTasks(arrayMove(tasks, oldIndex, newIndex));
+      const reordered = arrayMove(tasks, oldIndex, newIndex);
+      setTasks(reordered);
     }
   };
 
@@ -235,26 +219,10 @@ const Index = () => {
     setEditingTask(null);
   };
 
-  const handleSubTaskToggle = (taskId: string, subTaskId: string) => {
-    setTasks(tasks.map(task => {
-      if (task.id === taskId && task.subTasks) {
-        return {
-          ...task,
-          subTasks: task.subTasks.map(subTask =>
-            subTask.id === subTaskId
-              ? { ...subTask, completed: !subTask.completed }
-              : subTask
-          )
-        };
-      }
-      return task;
-    }));
-  };
-
   const sortedTasks = sortTasksByPriority(tasks);
   const todoTasks = sortedTasks.filter(task => !task.completed);
   
-  // Only show tasks completed today in "Terminées (Aujourd'hui)"
+  // Only show tasks completed today
   const today = new Date();
   const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
   const doneTasks = sortedTasks.filter(task => {
@@ -283,8 +251,9 @@ const Index = () => {
       <div 
         className="min-h-screen bg-background"
         style={{
-          paddingBottom: 'calc(1rem + env(safe-area-inset-bottom))',
-          minHeight: '100dvh'
+          paddingBottom: 'calc(84px + env(safe-area-inset-bottom))',
+          minHeight: '100dvh',
+          overscrollBehaviorY: 'contain'
         }}
       >
         <div className="max-w-6xl mx-auto p-4">
@@ -294,7 +263,7 @@ const Index = () => {
           {/* Sticky Header */}
           <div 
             ref={stickyWrapperRef}
-            className={`sticky top-0 z-40 bg-slate-50/80 backdrop-blur-md border-b border-slate-200 transition-all duration-300 -mx-4 px-4 ${
+            className={`sticky top-0 z-40 bg-slate-50/80 backdrop-blur-md supports-[backdrop-filter]:bg-slate-50/60 border-b border-slate-200 transition-all duration-300 -mx-4 px-4 ${
               isHeaderCompact ? 'py-2' : 'py-4'
             }`}
             style={{
@@ -321,43 +290,61 @@ const Index = () => {
                 </p>
               )}
               
-              {/* Balloon ribbon progress bar */}
+              {/* Progress ribbon */}
               <ProgressRibbon 
                 progress={tasks.length > 0 ? (doneTasks.length / tasks.length) * 100 : 0}
                 totalTasks={tasks.length}
                 completedTasks={doneTasks.length}
+                data-testid="progress-percent"
               />
             </div>
+
+            {/* Tabs */}
+            <div className="mt-4">
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                <TabsList className="grid w-full grid-cols-3 mb-4">
+                  <TabsTrigger value="todo" className="gap-2" data-testid="tab-todo">
+                    À faire 
+                    <span className="bg-sky-100 text-sky-800 px-2 py-0.5 rounded-full text-xs font-semibold">
+                      {todoTasks.length}
+                    </span>
+                  </TabsTrigger>
+                  <TabsTrigger value="done" className="gap-2" data-testid="tab-done">
+                    <span className="hidden sm:inline">Terminées (Aujourd'hui)</span>
+                    <span className="sm:hidden">Terminées</span>
+                    <span className="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full text-xs font-semibold">
+                      {doneTasks.length}
+                    </span>
+                  </TabsTrigger>
+                  <TabsTrigger value="history" data-testid="tab-history">
+                    Historique
+                    <span className="bg-slate-200 text-slate-700 px-2 py-0.5 rounded-full text-xs font-semibold ml-1">
+                      📅
+                    </span>
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
+
+            {/* Compact Add Bar */}
+            {isHeaderCompact && activeTab === "todo" && (
+              <CompactAddBar
+                ref={compactInputRef}
+                onAdd={(title) => addTask(title)}
+                visible={isHeaderCompact}
+                className="mb-3"
+              />
+            )}
           </div>
 
-          <div className="space-y-6">
+          <div className="space-y-6 mt-6">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-3 mb-6">
-                <TabsTrigger value="todo" className="gap-2">
-                  À faire 
-                  <span className="bg-sky-100 text-sky-800 px-2 py-0.5 rounded-full text-xs font-semibold">
-                    {todoTasks.length}
-                  </span>
-                </TabsTrigger>
-                <TabsTrigger value="done" className="gap-2">
-                  <span className="hidden sm:inline">Terminées (Aujourd'hui)</span>
-                  <span className="sm:hidden">Terminées</span>
-                  <span className="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full text-xs font-semibold">
-                    {doneTasks.length}
-                  </span>
-                </TabsTrigger>
-                <TabsTrigger value="history">
-                  Historique
-                  <span className="bg-slate-200 text-slate-700 px-2 py-0.5 rounded-full text-xs font-semibold ml-1">
-                    📅
-                  </span>
-                </TabsTrigger>
-              </TabsList>
-
               <TabsContent value="todo" className="mt-0 space-y-6">
-                <div ref={addTaskRef}>
-                  <AddTaskForm onAdd={addTask} />
-                </div>
+                {!isHeaderCompact && (
+                  <div ref={addTaskRef}>
+                    <AddTaskForm onAdd={addTask} />
+                  </div>
+                )}
                 
                 <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
                   <div className="space-y-6">
@@ -367,7 +354,7 @@ const Index = () => {
                       onViewAll={() => setActiveTab("done")}
                     />
                     
-                    {/* Mobile Collapsible - replaces sidebar on small screens */}
+                    {/* Mobile Collapsible */}
                     <CompletedCollapsible 
                       tasks={doneTasks}
                       onViewAll={() => setActiveTab("done")}
@@ -378,13 +365,16 @@ const Index = () => {
                       tasks={todoTasks}
                       onToggleTask={toggleTask}
                       onEditTask={handleEditTask}
-                      onSubTaskToggle={handleSubTaskToggle}
-                      onDeleteTask={deleteTask}
+                      onSubTaskToggle={toggleSubTask}
+                      onDeleteTask={handleDeleteTask}
+                      onAddSubTask={addSubTask}
+                      onReorderSubTasks={reorderSubTasks}
+                      onDeleteSubTask={deleteSubTask}
                       type="todo"
                     />
                   </div>
                   
-                  {/* Desktop Sidebar - hidden on mobile */}
+                  {/* Desktop Sidebar */}
                   <CompletedSidebar 
                     tasks={doneTasks}
                     onViewAll={() => setActiveTab("done")}
@@ -398,7 +388,10 @@ const Index = () => {
                   tasks={doneTasks}
                   onToggleTask={toggleTask}
                   onEditTask={handleEditTask}
-                  onSubTaskToggle={handleSubTaskToggle}
+                  onSubTaskToggle={toggleSubTask}
+                  onAddSubTask={addSubTask}
+                  onReorderSubTasks={reorderSubTasks}
+                  onDeleteSubTask={deleteSubTask}
                   type="done"
                 />
               </TabsContent>
@@ -407,7 +400,6 @@ const Index = () => {
                 <HistoryView onRefresh={loadTasks} />
               </TabsContent>
             </Tabs>
-
           </div>
 
           {/* Task Edit Dialog */}
@@ -419,10 +411,22 @@ const Index = () => {
           />
           
           {/* Floating Action Button (Mobile Only) */}
-          <FloatingActionButton onClick={handleFABClick} visible={showFAB} />
+          <FloatingActionButton 
+            onClick={handleFABClick} 
+            visible={showFAB && !isHeaderCompact}
+            data-testid="fab-add"
+          />
           
           {/* PWA Install Prompt */}
           <PWAInstallPrompt />
+          
+          {/* QA Button - Hidden */}
+          <button
+            onClick={() => (window as any).runMidnightMaintenance?.()}
+            data-testid="btn-maintenance"
+            className="hidden"
+            aria-hidden="true"
+          />
         </div>
       </div>
     </DndContext>

@@ -37,7 +37,9 @@ export const TaskEditDialog = ({ task, open, onClose, onSave }: TaskEditDialogPr
       const newSub: SubTask = {
         id: Date.now().toString(),
         text: newSubTask.trim(),
-        completed: false
+        completed: false,
+        createdAt: new Date(),
+        order: subTasks.length
       };
       setSubTasks([...subTasks, newSub]);
       setNewSubTask("");
@@ -50,7 +52,11 @@ export const TaskEditDialog = ({ task, open, onClose, onSave }: TaskEditDialogPr
 
   const toggleSubTask = (id: string) => {
     setSubTasks(subTasks.map(st => 
-      st.id === id ? { ...st, completed: !st.completed } : st
+      st.id === id ? { 
+        ...st, 
+        completed: !st.completed,
+        completedAt: !st.completed ? new Date() : undefined
+      } : st
     ));
   };
 

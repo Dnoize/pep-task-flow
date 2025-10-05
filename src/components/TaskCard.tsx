@@ -14,6 +14,7 @@ import {
 } from '@dnd-kit/utilities';
 import { GripVertical } from "lucide-react";
 import { BalloonBurst } from "./BalloonBurst";
+import { SubTaskList } from "./SubTaskList";
 
 export type Priority = "low" | "medium" | "high";
 
@@ -21,6 +22,9 @@ export interface SubTask {
   id: string;
   text: string;
   completed: boolean;
+  createdAt: Date;
+  completedAt?: Date;
+  order?: number;
 }
 
 export interface Task {
@@ -40,9 +44,12 @@ interface TaskCardProps {
   onEdit: (task: Task) => void;
   onSubTaskToggle: (taskId: string, subTaskId: string) => void;
   onDelete?: (id: string) => void;
+  onAddSubTask?: (taskId: string, title: string) => void;
+  onReorderSubTasks?: (taskId: string, oldIndex: number, newIndex: number) => void;
+  onDeleteSubTask?: (taskId: string, subTaskId: string) => void;
 }
 
-export const TaskCard = ({ task, onToggle, onEdit, onSubTaskToggle, onDelete }: TaskCardProps) => {
+export const TaskCard = ({ task, onToggle, onEdit, onSubTaskToggle, onDelete, onAddSubTask, onReorderSubTasks, onDeleteSubTask }: TaskCardProps) => {
   const [isAnimating, setIsAnimating] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
@@ -271,6 +278,7 @@ export const TaskCard = ({ task, onToggle, onEdit, onSubTaskToggle, onDelete }: 
           task.completed && "bg-gradient-success shadow-success",
           isDragging && "opacity-50 scale-95 z-50"
         )}
+        data-testid="task-item"
       >
         {showCelebration && (
           <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 z-10">
@@ -297,13 +305,17 @@ export const TaskCard = ({ task, onToggle, onEdit, onSubTaskToggle, onDelete }: 
           aria-label={task.completed ? `Marquer "${task.title}" comme non terminée` : `Marquer "${task.title}" comme terminée`}
           role="checkbox"
           aria-live="polite"
+          data-testid="task-check"
         />
         <div className="flex-1 min-w-0 cursor-pointer" onClick={() => onEdit(task)}>
           <div className="flex items-start justify-between gap-2 mb-2">
-            <p className={cn(
-              "text-sm font-medium leading-relaxed transition-all duration-200",
-              task.completed ? "text-success-foreground line-through" : "text-card-foreground"
-            )}>
+            <p 
+              className={cn(
+                "text-sm font-medium leading-relaxed transition-all duration-200",
+                task.completed ? "text-success-foreground line-through" : "text-card-foreground"
+              )}
+              data-testid="task-title"
+            >
               {task.title}
             </p>
             <span className={cn(
@@ -323,35 +335,16 @@ export const TaskCard = ({ task, onToggle, onEdit, onSubTaskToggle, onDelete }: 
             </p>
           )}
 
-          {task.subTasks && task.subTasks.length > 0 && (
-            <div className="mb-3 space-y-2 p-2 bg-muted/30 rounded-md border border-border/50">
-              <div className="text-xs font-medium text-muted-foreground mb-1">
-                Sous-tâches ({task.subTasks.filter(st => st.completed).length}/{task.subTasks.length})
-              </div>
-              {task.subTasks.map((subTask) => (
-                <div key={subTask.id} className="flex items-center gap-2 py-1 group">
-                  <Checkbox
-                    checked={subTask.completed}
-                    onCheckedChange={() => onSubTaskToggle(task.id, subTask.id)}
-                    className="h-3 w-3 data-[state=checked]:bg-success data-[state=checked]:border-success"
-                  />
-                  <span className={cn(
-                    "text-xs flex-1 cursor-pointer",
-                    subTask.completed 
-                      ? "text-success line-through opacity-70" 
-                      : "text-card-foreground hover:text-primary transition-colors"
-                  )}>
-                    {subTask.text}
-                  </span>
-                  <div className="w-4 h-4 rounded-full flex items-center justify-center transition-colors">
-                    {subTask.completed ? (
-                      <div className="w-2 h-2 bg-success rounded-full"></div>
-                    ) : (
-                      <div className="w-2 h-2 border border-muted-foreground/30 rounded-full group-hover:border-primary/50"></div>
-                    )}
-                  </div>
-                </div>
-              ))}
+          {onAddSubTask && onReorderSubTasks && onDeleteSubTask && (
+            <div className="my-3" onClick={(e) => e.stopPropagation()}>
+              <SubTaskList
+                taskId={task.id}
+                subTasks={task.subTasks || []}
+                onToggle={onSubTaskToggle}
+                onAdd={onAddSubTask}
+                onReorder={onReorderSubTasks}
+                onDelete={onDeleteSubTask}
+              />
             </div>
           )}
           
