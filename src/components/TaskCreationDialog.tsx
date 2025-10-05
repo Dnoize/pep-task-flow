@@ -17,6 +17,7 @@ export const TaskCreationDialog = ({ open, onClose, onAdd }: TaskCreationDialogP
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [priority, setPriority] = useState<Priority>("medium");
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
   const titleInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -26,6 +27,32 @@ export const TaskCreationDialog = ({ open, onClose, onAdd }: TaskCreationDialogP
         titleInputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }, 100);
     }
+  }, [open]);
+
+  // iOS keyboard detection using visualViewport API
+  useEffect(() => {
+    if (!open) return;
+
+    const handleResize = () => {
+      if (window.visualViewport) {
+        const viewportHeight = window.visualViewport.height;
+        const windowHeight = window.innerHeight;
+        const diff = windowHeight - viewportHeight;
+        setKeyboardHeight(diff > 0 ? diff : 0);
+      }
+    };
+
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', handleResize);
+      handleResize(); // Initial check
+    }
+
+    return () => {
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', handleResize);
+      }
+      setKeyboardHeight(0);
+    };
   }, [open]);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -49,8 +76,13 @@ export const TaskCreationDialog = ({ open, onClose, onAdd }: TaskCreationDialogP
     <Sheet open={open} onOpenChange={onClose}>
       <SheetContent 
         side="bottom" 
-        className="h-[100dvh] overflow-y-auto"
-        style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 72px)' }}
+        className="overflow-y-auto"
+        style={{ 
+          height: keyboardHeight > 0 ? `calc(100dvh - ${keyboardHeight}px)` : '100dvh',
+          paddingBottom: keyboardHeight > 0 
+            ? `calc(${keyboardHeight}px + 72px)` 
+            : 'calc(env(safe-area-inset-bottom) + 72px)'
+        }}
       >
         <SheetHeader className="mb-6">
           <SheetTitle className="text-2xl">🎈 Créer une tâche</SheetTitle>
@@ -132,8 +164,14 @@ export const TaskCreationDialog = ({ open, onClose, onAdd }: TaskCreationDialogP
           </div>
 
           <div 
-            className="fixed bottom-0 left-0 right-0 p-4 bg-background border-t border-border flex gap-2"
-            style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 16px)' }}
+            className="fixed bottom-0 left-0 right-0 p-4 bg-background border-t border-border flex gap-2 z-50"
+            style={{ 
+              paddingBottom: keyboardHeight > 0 
+                ? '16px' 
+                : 'calc(env(safe-area-inset-bottom) + 16px)',
+              transform: keyboardHeight > 0 ? `translateY(-${keyboardHeight}px)` : 'none',
+              transition: 'transform 0.2s ease-out'
+            }}
           >
             <Button
               type="button"

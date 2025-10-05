@@ -255,7 +255,9 @@ const Index = () => {
           <div 
             ref={stickyWrapperRef}
             className={cn(
-              "sticky top-0 z-40 bg-slate-50/95 backdrop-blur-md supports-[backdrop-filter]:bg-slate-50/80 border-b border-slate-200 transition-all duration-300 -mx-4 px-4",
+              "sticky top-0 z-40 bg-slate-50/95 backdrop-blur-md supports-[backdrop-filter]:bg-slate-50/80 border-b border-slate-200",
+              "transition-all duration-300 ease-out will-change-[max-height]",
+              "-mx-4 px-4",
               "py-1.5 lg:py-4 overflow-visible",
               "[--hdr:15svh] lg:[--hdr:none]",
               "max-h-[var(--hdr)] lg:max-h-none"
@@ -282,10 +284,10 @@ const Index = () => {
             </div>
             <div className="text-center relative z-10">
               <h1 className={cn(
-                "font-bold transition-all duration-300",
+                "font-bold transition-all duration-300 ease-out",
                 isHeaderCompact 
-                  ? 'text-lg mb-1 leading-tight' 
-                  : 'text-xl sm:text-2xl lg:text-5xl mb-1 lg:mb-2 leading-tight'
+                  ? 'text-lg leading-tight' 
+                  : 'text-lg sm:text-xl lg:text-5xl mb-1 lg:mb-2 leading-tight'
               )}
               style={{
                 background: 'linear-gradient(to right, #60A5FA, #34D399)',
