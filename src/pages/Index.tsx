@@ -376,7 +376,7 @@ const Index = () => {
 
             {/* Compact Add Bar - Mobile only, shown when compact */}
             {isHeaderCompact && activeTab === "todo" && (
-              <div className="lg:hidden mt-1">
+              <div className="lg:hidden mt-0.5">
                 <CompactAddBar
                   ref={compactButtonRef}
                   onAdd={() => {
