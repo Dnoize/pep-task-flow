@@ -6,11 +6,11 @@ interface ProgressRibbonProps {
 
 export const ProgressRibbon = ({ progress, totalTasks, completedTasks }: ProgressRibbonProps) => {
   return (
-    <div className="max-w-md mx-auto mb-3 lg:mb-6" data-testid="progress-percent">
-      <div className="flex justify-between text-xs sm:text-sm text-muted-foreground mb-1.5">
+    <div className="max-w-md mx-auto mb-2 lg:mb-4" data-testid="progress-percent">
+      <div className="flex justify-between text-xs text-muted-foreground mb-1">
         <span className="flex items-center gap-1.5">
-          <span className="text-sm">🎈</span>
-          <span className="font-medium">Progression du jour</span>
+          <span className="text-xs">🎈</span>
+          <span className="font-medium">Progression</span>
         </span>
         <span className="font-semibold tabular-nums">{Math.round(progress)}%</span>
       </div>

@@ -256,7 +256,7 @@ const Index = () => {
             ref={stickyWrapperRef}
             className={cn(
               "sticky top-0 z-40 bg-slate-50/95 backdrop-blur-md supports-[backdrop-filter]:bg-slate-50/80 border-b border-slate-200 transition-all duration-300 -mx-4 px-4",
-              isHeaderCompact ? 'py-2 overflow-visible' : 'py-2 lg:py-4 overflow-visible',
+              "py-1.5 lg:py-4 overflow-visible",
               "[--hdr:15svh] lg:[--hdr:none]",
               "max-h-[var(--hdr)] lg:max-h-none"
             )}
@@ -283,7 +283,9 @@ const Index = () => {
             <div className="text-center relative z-10">
               <h1 className={cn(
                 "font-bold transition-all duration-300",
-                isHeaderCompact ? 'text-lg mb-1 leading-tight' : 'text-2xl md:text-3xl lg:text-5xl mb-2 lg:mb-3'
+                isHeaderCompact 
+                  ? 'text-lg mb-1 leading-tight' 
+                  : 'text-xl sm:text-2xl lg:text-5xl mb-1 lg:mb-2 leading-tight'
               )}
               style={{
                 background: 'linear-gradient(to right, #60A5FA, #34D399)',
@@ -294,7 +296,7 @@ const Index = () => {
                 🎈 Balloon Tasks 🎈
               </h1>
               {!isHeaderCompact && (
-                <p className="text-muted-foreground mb-2 lg:mb-3 text-xs lg:text-base">
+                <p className="hidden lg:block text-muted-foreground mb-2 lg:mb-3 text-xs lg:text-base">
                   Organisez vos tâches avec légèreté et motivation
                 </p>
               )}
@@ -309,9 +311,9 @@ const Index = () => {
             </div>
 
             {/* Tabs */}
-            <div className={cn("transition-all", isHeaderCompact ? "mt-1" : "mt-2")}>
+            <div className={cn("transition-all", isHeaderCompact ? "mt-1" : "mt-1.5 lg:mt-2")}>
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className={cn("grid w-full grid-cols-3 text-sm", isHeaderCompact ? "mb-1 h-9" : "mb-2 h-10")}>
+                <TabsList className={cn("grid w-full grid-cols-3 text-sm", isHeaderCompact ? "mb-0.5 h-9" : "mb-1 lg:mb-2 h-9 lg:h-10")}>
                   <TabsTrigger value="todo" className="gap-1.5 text-xs sm:text-sm" data-testid="tab-todo">
                     <span className="hidden sm:inline">À faire</span>
                     <span className="sm:hidden">À faire</span>
@@ -334,17 +336,16 @@ const Index = () => {
               </Tabs>
             </div>
 
-            {/* Compact Add Bar - Mobile only */}
+            {/* Compact Add Bar - Mobile only, shown when compact */}
             {isHeaderCompact && activeTab === "todo" && (
               <div className="lg:hidden">
                 <CompactAddBar
                   ref={compactButtonRef}
                   onAdd={() => {
-                    // Open creation dialog on mobile
                     setIsCreationDialogOpen(true);
                   }}
                   visible={isHeaderCompact}
-                  className="mb-1.5"
+                  className="mb-1"
                 />
               </div>
             )}
