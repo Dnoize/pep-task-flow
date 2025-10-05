@@ -388,17 +388,17 @@ const Index = () => {
             )}
           </div>
 
-          <div className="space-y-6 mt-6">
+          <div className="space-y-4 mt-3">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsContent value="todo" className="mt-0 space-y-6">
+              <TabsContent value="todo" className="mt-0 space-y-4">
                 {!isHeaderCompact && (
-                  <div ref={addTaskRef}>
+                  <div ref={addTaskRef} className="pt-1">
                     <AddTaskForm onAdd={addTask} />
                   </div>
                 )}
                 
-                <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
-                  <div className="space-y-6">
+                <div className="grid gap-4 lg:gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+                  <div className="space-y-4 lg:space-y-6">
                     <CompletedInlineSummary 
                       tasks={doneTasks} 
                       max={5}
@@ -433,7 +433,7 @@ const Index = () => {
                 </div>
               </TabsContent>
 
-              <TabsContent value="done" className="mt-0 space-y-6">
+              <TabsContent value="done" className="mt-0 space-y-4 lg:space-y-6">
                 <TaskColumn
                   title="TERMINÉES (AUJOURD'HUI)"
                   tasks={doneTasks}
@@ -447,7 +447,7 @@ const Index = () => {
                 />
               </TabsContent>
 
-              <TabsContent value="history" className="mt-0 space-y-6">
+              <TabsContent value="history" className="mt-0 space-y-4 lg:space-y-6">
                 <HistoryView onRefresh={loadTasks} />
               </TabsContent>
             </Tabs>
