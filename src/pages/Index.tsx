@@ -59,7 +59,7 @@ const Index = () => {
   const [showFAB, setShowFAB] = useState(true);
   
   const addTaskRef = useRef<HTMLDivElement>(null);
-  const compactInputRef = useRef<HTMLInputElement>(null);
+  const compactButtonRef = useRef<HTMLButtonElement>(null);
   const stickyWrapperRef = useRef<HTMLDivElement>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
@@ -255,17 +255,31 @@ const Index = () => {
           <div 
             ref={stickyWrapperRef}
             className={cn(
-              "sticky top-0 z-40 bg-slate-50/80 backdrop-blur-md supports-[backdrop-filter]:bg-slate-50/60 border-b border-slate-200 transition-all duration-300 -mx-4 px-4 overflow-visible",
-              isHeaderCompact ? 'py-2' : 'py-2 lg:py-4',
-              "[--hdr:15svh] max-h-[var(--hdr)] lg:max-h-none"
+              "sticky top-0 z-40 bg-slate-50/95 backdrop-blur-md supports-[backdrop-filter]:bg-slate-50/80 border-b border-slate-200 transition-all duration-300 -mx-4 px-4",
+              isHeaderCompact ? 'py-2 overflow-visible' : 'py-2 lg:py-4 overflow-visible',
+              "[--hdr:15svh] lg:[--hdr:none]",
+              "max-h-[var(--hdr)] lg:max-h-none"
             )}
-            style={{
-              backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'200\' height=\'200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cellipse cx=\'40\' cy=\'50\' rx=\'18\' ry=\'24\' fill=\'%2360A5FA\' opacity=\'0.05\'/%3E%3Cellipse cx=\'140\' cy=\'100\' rx=\'15\' ry=\'22\' fill=\'%2334D399\' opacity=\'0.06\'/%3E%3Cellipse cx=\'100\' cy=\'150\' rx=\'12\' ry=\'18\' fill=\'%23FB7185\' opacity=\'0.04\'/%3E%3C/svg%3E")',
-              backgroundSize: 'clamp(140px, 32vw, 220px) auto',
-              backgroundPosition: 'right -24px top -16px',
-              backgroundRepeat: 'no-repeat'
-            }}
           >
+            {/* Decorative balloons - positioned absolutely to avoid clipping */}
+            <div 
+              className="absolute right-0 top-0 pointer-events-none overflow-visible"
+              style={{
+                width: 'clamp(140px, 32vw, 220px)',
+                height: '200px',
+                right: '-24px',
+                top: '-16px',
+                zIndex: 0,
+                opacity: 0.05
+              }}
+              aria-hidden="true"
+            >
+              <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+                <ellipse cx="40" cy="50" rx="18" ry="24" fill="#60A5FA" opacity="1"/>
+                <ellipse cx="140" cy="100" rx="15" ry="22" fill="#34D399" opacity="1.2"/>
+                <ellipse cx="100" cy="150" rx="12" ry="18" fill="#FB7185" opacity="0.8"/>
+              </svg>
+            </div>
             <div className="text-center relative z-10">
               <h1 className={cn(
                 "font-bold transition-all duration-300",
@@ -324,13 +338,13 @@ const Index = () => {
             {isHeaderCompact && activeTab === "todo" && (
               <div className="lg:hidden">
                 <CompactAddBar
-                  ref={compactInputRef}
-                  onAdd={(title) => {
-                    // Open creation dialog on mobile instead
+                  ref={compactButtonRef}
+                  onAdd={() => {
+                    // Open creation dialog on mobile
                     setIsCreationDialogOpen(true);
                   }}
                   visible={isHeaderCompact}
-                  className="mb-2"
+                  className="mb-1.5"
                 />
               </div>
             )}

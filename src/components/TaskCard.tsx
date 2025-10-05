@@ -271,7 +271,7 @@ export const TaskCard = ({ task, onToggle, onEdit, onSubTaskToggle, onDelete, on
             : style.transform,
         }} 
         className={cn(
-          "py-2 px-3 transition-all duration-300 ease-in-out shadow-card hover:shadow-balloon rounded-2xl relative z-10 cursor-pointer",
+          "py-2 px-3 transition-all duration-300 ease-in-out shadow-card hover:shadow-balloon rounded-2xl relative z-10",
           "bg-gradient-card border-border/50",
           isAnimating && "scale-95 opacity-75",
           isCompleting && "animate-confetti-explosion",
@@ -279,7 +279,6 @@ export const TaskCard = ({ task, onToggle, onEdit, onSubTaskToggle, onDelete, on
           isDragging && "opacity-50 scale-95 z-50"
         )}
         data-testid="task-item"
-        onClick={() => onEdit(task)}
       >
         {showCelebration && (
           <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 z-10">
@@ -288,7 +287,10 @@ export const TaskCard = ({ task, onToggle, onEdit, onSubTaskToggle, onDelete, on
             </div>
           </div>
         )}
-      <div className="flex items-start gap-2">
+      <div 
+        className="flex items-start gap-2 cursor-pointer"
+        onClick={() => onEdit(task)}
+      >
         <div 
           className="cursor-grab active:cursor-grabbing mt-0.5 opacity-40 hover:opacity-80 transition-opacity -m-2 p-2"
           onClick={(e) => e.stopPropagation()}
