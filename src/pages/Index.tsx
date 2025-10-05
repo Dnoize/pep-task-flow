@@ -376,7 +376,7 @@ const Index = () => {
 
             {/* Compact Add Bar - Mobile only, shown when compact */}
             {isHeaderCompact && activeTab === "todo" && (
-              <div className="lg:hidden mt-0.5">
+              <div className="lg:hidden mt-2">
                 <CompactAddBar
                   ref={compactButtonRef}
                   onAdd={() => {
@@ -388,11 +388,11 @@ const Index = () => {
             )}
           </div>
 
-          <div className="space-y-4 mt-3">
+          <div className="space-y-4 mt-5">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsContent value="todo" className="mt-0 space-y-4">
                 {!isHeaderCompact && (
-                  <div ref={addTaskRef} className="pt-1">
+                  <div ref={addTaskRef} className="pt-2">
                     <AddTaskForm onAdd={addTask} />
                   </div>
                 )}
