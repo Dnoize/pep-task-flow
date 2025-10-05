@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -16,6 +16,14 @@ export const AddTaskForm = ({ onAdd }: AddTaskFormProps) => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [priority, setPriority] = useState<Priority>("medium");
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const handleFocus = () => {
+    // Scroll input into view when focused (iOS keyboard handling)
+    setTimeout(() => {
+      inputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 100);
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,8 +40,10 @@ export const AddTaskForm = ({ onAdd }: AddTaskFormProps) => {
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="flex gap-3">
           <Input
+            ref={inputRef}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
+            onFocus={handleFocus}
             placeholder="🎈 Ajouter une nouvelle tâche..."
             className="flex-1 border-input bg-background/50 focus:ring-primary focus:border-primary rounded-xl text-base"
             style={{ fontSize: '16px' }}

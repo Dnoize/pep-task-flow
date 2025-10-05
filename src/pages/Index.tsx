@@ -37,7 +37,10 @@ const Index = () => {
   const [activeTab, setActiveTab] = useState("todo");
   const [isLoading, setIsLoading] = useState(true);
   const [isHeaderCompact, setIsHeaderCompact] = useState(false);
+  const [showFAB, setShowFAB] = useState(true);
   const addTaskRef = useRef<HTMLDivElement>(null);
+  const stickyWrapperRef = useRef<HTMLDivElement>(null);
+  const sentinelRef = useRef<HTMLDivElement>(null);
   
   // Debounced save function
   const debouncedSave = useCallback(
@@ -60,14 +63,43 @@ const Index = () => {
     }
   }, [tasks, isLoading, debouncedSave]);
   
-  // Track header scroll for compact mode
+  // Track sticky state with IntersectionObserver
   useEffect(() => {
-    const handleScroll = () => {
-      setIsHeaderCompact(window.scrollY > 100);
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsHeaderCompact(!entry.isIntersecting);
+      },
+      { threshold: 0, rootMargin: '-1px 0px 0px 0px' }
+    );
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, []);
+
+  // Track input focus to hide FAB
+  useEffect(() => {
+    const handleFocus = (e: FocusEvent) => {
+      if ((e.target as HTMLElement).tagName === 'INPUT' || (e.target as HTMLElement).tagName === 'TEXTAREA') {
+        setShowFAB(false);
+      }
     };
+
+    const handleBlur = (e: FocusEvent) => {
+      if ((e.target as HTMLElement).tagName === 'INPUT' || (e.target as HTMLElement).tagName === 'TEXTAREA') {
+        setTimeout(() => setShowFAB(true), 200);
+      }
+    };
+
+    document.addEventListener('focusin', handleFocus);
+    document.addEventListener('focusout', handleBlur);
     
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    return () => {
+      document.removeEventListener('focusin', handleFocus);
+      document.removeEventListener('focusout', handleBlur);
+    };
   }, []);
 
   const loadTasks = async () => {
@@ -256,21 +288,31 @@ const Index = () => {
         }}
       >
         <div className="max-w-6xl mx-auto p-4">
+          {/* Sentinel for IntersectionObserver */}
+          <div ref={sentinelRef} className="h-1 -mt-1" aria-hidden="true" />
+          
           {/* Sticky Header */}
           <div 
-            className={`sticky top-0 z-40 bg-background/95 backdrop-blur-sm transition-all duration-300 -mx-4 px-4 ${
+            ref={stickyWrapperRef}
+            className={`sticky top-0 z-40 bg-slate-50/80 backdrop-blur-md border-b border-slate-200 transition-all duration-300 -mx-4 px-4 ${
               isHeaderCompact ? 'py-2' : 'py-4'
             }`}
             style={{
-              backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'100\' height=\'100\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cellipse cx=\'20\' cy=\'30\' rx=\'15\' ry=\'20\' fill=\'%2360A5FA\' opacity=\'0.03\'/%3E%3Cellipse cx=\'70\' cy=\'60\' rx=\'12\' ry=\'18\' fill=\'%2334D399\' opacity=\'0.04\'/%3E%3Cellipse cx=\'50\' cy=\'80\' rx=\'10\' ry=\'15\' fill=\'%23FB7185\' opacity=\'0.03\'/%3E%3C/svg%3E")',
+              backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'100\' height=\'100\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cellipse cx=\'20\' cy=\'30\' rx=\'15\' ry=\'20\' fill=\'%2360A5FA\' opacity=\'0.04\'/%3E%3Cellipse cx=\'70\' cy=\'60\' rx=\'12\' ry=\'18\' fill=\'%2334D399\' opacity=\'0.05\'/%3E%3Cellipse cx=\'50\' cy=\'80\' rx=\'10\' ry=\'15\' fill=\'%23FB7185\' opacity=\'0.04\'/%3E%3C/svg%3E")',
               backgroundSize: '200px 200px',
               backgroundRepeat: 'repeat'
             }}
           >
             <div className="text-center">
-              <h1 className={`font-bold bg-gradient-to-r from-primary via-success to-accent bg-clip-text text-transparent transition-all duration-300 ${
+              <h1 className={`font-bold transition-all duration-300 ${
                 isHeaderCompact ? 'text-2xl mb-2' : 'text-4xl md:text-5xl mb-4'
-              }`}>
+              }`}
+              style={{
+                background: 'linear-gradient(to right, #60A5FA, #34D399)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+              }}>
                 🎈 Balloon Tasks 🎈
               </h1>
               {!isHeaderCompact && (
@@ -293,18 +335,22 @@ const Index = () => {
               <TabsList className="grid w-full grid-cols-3 mb-6">
                 <TabsTrigger value="todo" className="gap-2">
                   À faire 
-                  <span className="bg-secondary/20 text-secondary px-2 py-0.5 rounded-full text-xs">
+                  <span className="bg-sky-100 text-sky-800 px-2 py-0.5 rounded-full text-xs font-semibold">
                     {todoTasks.length}
                   </span>
                 </TabsTrigger>
                 <TabsTrigger value="done" className="gap-2">
-                  Terminées (Aujourd'hui)
-                  <span className="bg-success/20 text-success px-2 py-0.5 rounded-full text-xs">
+                  <span className="hidden sm:inline">Terminées (Aujourd'hui)</span>
+                  <span className="sm:hidden">Terminées</span>
+                  <span className="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full text-xs font-semibold">
                     {doneTasks.length}
                   </span>
                 </TabsTrigger>
                 <TabsTrigger value="history">
                   Historique
+                  <span className="bg-slate-200 text-slate-700 px-2 py-0.5 rounded-full text-xs font-semibold ml-1">
+                    📅
+                  </span>
                 </TabsTrigger>
               </TabsList>
 
@@ -373,7 +419,7 @@ const Index = () => {
           />
           
           {/* Floating Action Button (Mobile Only) */}
-          <FloatingActionButton onClick={handleFABClick} />
+          <FloatingActionButton onClick={handleFABClick} visible={showFAB} />
           
           {/* PWA Install Prompt */}
           <PWAInstallPrompt />

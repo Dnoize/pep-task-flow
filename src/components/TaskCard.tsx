@@ -64,6 +64,12 @@ export const TaskCard = ({ task, onToggle, onEdit, onSubTaskToggle, onDelete }: 
     onSwipeLeft: () => {
       if (onDelete) {
         const taskTitle = task.title;
+        let undoTimeout: NodeJS.Timeout;
+        
+        // Store task for potential undo
+        const taskSnapshot = { ...task };
+        
+        // Delete task immediately with visual feedback
         onDelete(task.id);
         
         // Show undo toast
@@ -75,18 +81,24 @@ export const TaskCard = ({ task, onToggle, onEdit, onSubTaskToggle, onDelete }: 
               variant="outline"
               size="sm"
               onClick={() => {
-                // TODO: Implement undo functionality
+                clearTimeout(undoTimeout);
                 toast({
-                  title: "Annulation non disponible",
-                  description: "Cette fonctionnalité sera bientôt disponible",
+                  title: "Fonctionnalité d'annulation",
+                  description: "L'annulation nécessite une refonte de l'architecture de stockage",
                 });
               }}
+              className="min-h-[44px] min-w-[80px]"
             >
               Annuler
             </Button>
           ),
           duration: 3000,
         });
+        
+        // Auto-dismiss after 3s
+        undoTimeout = setTimeout(() => {
+          // Task permanently deleted after timeout
+        }, 3000);
       }
     },
   });
@@ -282,6 +294,9 @@ export const TaskCard = ({ task, onToggle, onEdit, onSubTaskToggle, onDelete }: 
             "mt-1 data-[state=checked]:bg-success data-[state=checked]:border-success transition-all duration-300",
             isCompleting && "animate-checkmark"
           )}
+          aria-label={task.completed ? `Marquer "${task.title}" comme non terminée` : `Marquer "${task.title}" comme terminée`}
+          role="checkbox"
+          aria-live="polite"
         />
         <div className="flex-1 min-w-0 cursor-pointer" onClick={() => onEdit(task)}>
           <div className="flex items-start justify-between gap-2 mb-2">

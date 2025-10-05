@@ -4,10 +4,11 @@ import { cn } from "@/lib/utils";
 
 interface FloatingActionButtonProps {
   onClick: () => void;
+  visible?: boolean;
   className?: string;
 }
 
-export const FloatingActionButton = ({ onClick, className }: FloatingActionButtonProps) => {
+export const FloatingActionButton = ({ onClick, visible = true, className }: FloatingActionButtonProps) => {
   return (
     <Button
       onClick={onClick}
@@ -17,6 +18,7 @@ export const FloatingActionButton = ({ onClick, className }: FloatingActionButto
         "transition-all duration-300 hover:scale-110 active:scale-95",
         "z-50 lg:hidden",
         "focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
+        !visible && "opacity-0 pointer-events-none translate-y-4",
         className
       )}
       style={{
@@ -24,6 +26,7 @@ export const FloatingActionButton = ({ onClick, className }: FloatingActionButto
         right: "calc(1rem + env(safe-area-inset-right))",
       }}
       aria-label="Ajouter une tâche"
+      aria-hidden={!visible}
     >
       <Plus className="h-6 w-6 text-white" />
     </Button>

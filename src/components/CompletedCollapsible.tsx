@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Task } from "@/components/TaskCard";
@@ -10,7 +10,14 @@ interface CompletedCollapsibleProps {
 }
 
 export const CompletedCollapsible = ({ tasks, onViewAll }: CompletedCollapsibleProps) => {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(() => {
+    const stored = localStorage.getItem('completedCollapsibleOpen');
+    return stored ? JSON.parse(stored) : false;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('completedCollapsibleOpen', JSON.stringify(isOpen));
+  }, [isOpen]);
 
   if (tasks.length === 0) return null;
 
