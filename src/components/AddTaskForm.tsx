@@ -35,7 +35,8 @@ export const AddTaskForm = ({ onAdd }: AddTaskFormProps) => {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="🎈 Ajouter une nouvelle tâche..."
-            className="flex-1 border-input bg-background/50 focus:ring-primary focus:border-primary rounded-xl"
+            className="flex-1 border-input bg-background/50 focus:ring-primary focus:border-primary rounded-xl text-base"
+            style={{ fontSize: '16px' }}
           />
         <Button 
           type="submit" 
@@ -54,7 +55,8 @@ export const AddTaskForm = ({ onAdd }: AddTaskFormProps) => {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Ajouter des notes..."
-              className="mt-1 min-h-[60px] text-sm"
+              className="mt-1 min-h-[60px] text-base"
+              style={{ fontSize: '16px' }}
               rows={2}
             />
           </div>

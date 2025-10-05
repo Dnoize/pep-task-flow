@@ -16,10 +16,11 @@ interface TaskColumnProps {
   onToggleTask: (id: string) => void;
   onEditTask: (task: Task) => void;
   onSubTaskToggle: (taskId: string, subTaskId: string) => void;
+  onDeleteTask?: (id: string) => void;
   type: "todo" | "done";
 }
 
-export const TaskColumn = ({ title, tasks, onToggleTask, onEditTask, onSubTaskToggle, type }: TaskColumnProps) => {
+export const TaskColumn = ({ title, tasks, onToggleTask, onEditTask, onSubTaskToggle, onDeleteTask, type }: TaskColumnProps) => {
   const {
     setNodeRef,
     isOver,
@@ -72,6 +73,7 @@ export const TaskColumn = ({ title, tasks, onToggleTask, onEditTask, onSubTaskTo
                 onToggle={onToggleTask}
                 onEdit={onEditTask}
                 onSubTaskToggle={onSubTaskToggle}
+                onDelete={onDeleteTask}
               />
             ))}
           </SortableContext>

@@ -1,15 +1,19 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { AddTaskForm } from "@/components/AddTaskForm";
 import { TaskColumn } from "@/components/TaskColumn";
 import { TaskEditDialog } from "@/components/TaskEditDialog";
 import { HistoryView } from "@/components/HistoryView";
 import { CompletedInlineSummary } from "@/components/CompletedInlineSummary";
 import { CompletedSidebar } from "@/components/CompletedSidebar";
+import { CompletedCollapsible } from "@/components/CompletedCollapsible";
 import { ProgressRibbon } from "@/components/ProgressRibbon";
+import { FloatingActionButton } from "@/components/FloatingActionButton";
+import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import { Task, Priority } from "@/components/TaskCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { storage } from "@/lib/storage";
 import { maintenanceManager } from "@/lib/maintenance";
+import { debounce } from "@/lib/debounce";
 import {
   DndContext, 
   closestCenter,
@@ -32,6 +36,16 @@ const Index = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("todo");
   const [isLoading, setIsLoading] = useState(true);
+  const [isHeaderCompact, setIsHeaderCompact] = useState(false);
+  const addTaskRef = useRef<HTMLDivElement>(null);
+  
+  // Debounced save function
+  const debouncedSave = useCallback(
+    debounce((tasksToSave: Task[]) => {
+      storage.saveTasks(tasksToSave);
+    }, 200),
+    []
+  );
 
   // Load tasks from storage on mount
   useEffect(() => {
@@ -39,12 +53,22 @@ const Index = () => {
   }, []);
 
 
-  // Save tasks to storage whenever tasks change
+  // Save tasks to storage with debounce
   useEffect(() => {
     if (!isLoading && tasks.length >= 0) {
-      storage.saveTasks(tasks);
+      debouncedSave(tasks);
     }
-  }, [tasks, isLoading]);
+  }, [tasks, isLoading, debouncedSave]);
+  
+  // Track header scroll for compact mode
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsHeaderCompact(window.scrollY > 100);
+    };
+    
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const loadTasks = async () => {
     try {
@@ -95,6 +119,19 @@ const Index = () => {
     };
     const updatedTasks = [newTask, ...tasks];
     setTasks(sortTasksByPriority(updatedTasks));
+  };
+  
+  const deleteTask = (id: string) => {
+    setTasks(tasks.filter(task => task.id !== id));
+  };
+  
+  const handleFABClick = () => {
+    setActiveTab("todo");
+    setTimeout(() => {
+      addTaskRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      const input = addTaskRef.current?.querySelector('input');
+      input?.focus();
+    }, 100);
   };
 
   const toggleTask = (id: string) => {
@@ -211,22 +248,44 @@ const Index = () => {
       collisionDetection={closestCenter}
       onDragEnd={handleDragEnd}
     >
-      <div className="min-h-screen bg-background">
+      <div 
+        className="min-h-screen bg-background"
+        style={{
+          paddingBottom: 'calc(1rem + env(safe-area-inset-bottom))',
+          minHeight: '100dvh'
+        }}
+      >
         <div className="max-w-6xl mx-auto p-4">
-          <div className="text-center mb-8">
-            <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary via-success to-accent bg-clip-text text-transparent mb-4">
-              🎈 Balloon Tasks 🎈
-            </h1>
-            <p className="text-muted-foreground mb-4">
-              Organisez vos tâches avec légèreté et motivation
-            </p>
-            
-            {/* Balloon ribbon progress bar */}
-            <ProgressRibbon 
-              progress={tasks.length > 0 ? (doneTasks.length / tasks.length) * 100 : 0}
-              totalTasks={tasks.length}
-              completedTasks={doneTasks.length}
-            />
+          {/* Sticky Header */}
+          <div 
+            className={`sticky top-0 z-40 bg-background/95 backdrop-blur-sm transition-all duration-300 -mx-4 px-4 ${
+              isHeaderCompact ? 'py-2' : 'py-4'
+            }`}
+            style={{
+              backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'100\' height=\'100\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cellipse cx=\'20\' cy=\'30\' rx=\'15\' ry=\'20\' fill=\'%2360A5FA\' opacity=\'0.03\'/%3E%3Cellipse cx=\'70\' cy=\'60\' rx=\'12\' ry=\'18\' fill=\'%2334D399\' opacity=\'0.04\'/%3E%3Cellipse cx=\'50\' cy=\'80\' rx=\'10\' ry=\'15\' fill=\'%23FB7185\' opacity=\'0.03\'/%3E%3C/svg%3E")',
+              backgroundSize: '200px 200px',
+              backgroundRepeat: 'repeat'
+            }}
+          >
+            <div className="text-center">
+              <h1 className={`font-bold bg-gradient-to-r from-primary via-success to-accent bg-clip-text text-transparent transition-all duration-300 ${
+                isHeaderCompact ? 'text-2xl mb-2' : 'text-4xl md:text-5xl mb-4'
+              }`}>
+                🎈 Balloon Tasks 🎈
+              </h1>
+              {!isHeaderCompact && (
+                <p className="text-muted-foreground mb-4">
+                  Organisez vos tâches avec légèreté et motivation
+                </p>
+              )}
+              
+              {/* Balloon ribbon progress bar */}
+              <ProgressRibbon 
+                progress={tasks.length > 0 ? (doneTasks.length / tasks.length) * 100 : 0}
+                totalTasks={tasks.length}
+                completedTasks={doneTasks.length}
+              />
+            </div>
           </div>
 
           <div className="space-y-6">
@@ -250,7 +309,9 @@ const Index = () => {
               </TabsList>
 
               <TabsContent value="todo" className="mt-0 space-y-6">
-                <AddTaskForm onAdd={addTask} />
+                <div ref={addTaskRef}>
+                  <AddTaskForm onAdd={addTask} />
+                </div>
                 
                 <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
                   <div className="space-y-6">
@@ -259,16 +320,25 @@ const Index = () => {
                       max={5}
                       onViewAll={() => setActiveTab("done")}
                     />
+                    
+                    {/* Mobile Collapsible - replaces sidebar on small screens */}
+                    <CompletedCollapsible 
+                      tasks={doneTasks}
+                      onViewAll={() => setActiveTab("done")}
+                    />
+                    
                     <TaskColumn
                       title="À FAIRE"
                       tasks={todoTasks}
                       onToggleTask={toggleTask}
                       onEditTask={handleEditTask}
                       onSubTaskToggle={handleSubTaskToggle}
+                      onDeleteTask={deleteTask}
                       type="todo"
                     />
                   </div>
                   
+                  {/* Desktop Sidebar - hidden on mobile */}
                   <CompletedSidebar 
                     tasks={doneTasks}
                     onViewAll={() => setActiveTab("done")}
@@ -301,6 +371,12 @@ const Index = () => {
             onClose={handleCloseDialog}
             onSave={handleSaveTask}
           />
+          
+          {/* Floating Action Button (Mobile Only) */}
+          <FloatingActionButton onClick={handleFABClick} />
+          
+          {/* PWA Install Prompt */}
+          <PWAInstallPrompt />
         </div>
       </div>
     </DndContext>

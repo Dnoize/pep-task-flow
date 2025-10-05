@@ -1,7 +1,11 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useSwipe } from "@/hooks/useSwipe";
+import { Trash2, CheckCircle2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import {
   useSortable,
 } from '@dnd-kit/sortable';
@@ -35,13 +39,57 @@ interface TaskCardProps {
   onToggle: (id: string) => void;
   onEdit: (task: Task) => void;
   onSubTaskToggle: (taskId: string, subTaskId: string) => void;
+  onDelete?: (id: string) => void;
 }
 
-export const TaskCard = ({ task, onToggle, onEdit, onSubTaskToggle }: TaskCardProps) => {
+export const TaskCard = ({ task, onToggle, onEdit, onSubTaskToggle, onDelete }: TaskCardProps) => {
   const [isAnimating, setIsAnimating] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
   const [showBalloons, setShowBalloons] = useState(false);
+  const { toast } = useToast();
+  
+  // Swipe gestures
+  const { swipeOffset, handlers } = useSwipe({
+    onSwipeRight: () => {
+      if (!task.completed && onToggle) {
+        handleToggle();
+        
+        // Haptic feedback on mobile
+        if ('vibrate' in navigator && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          navigator.vibrate(10);
+        }
+      }
+    },
+    onSwipeLeft: () => {
+      if (onDelete) {
+        const taskTitle = task.title;
+        onDelete(task.id);
+        
+        // Show undo toast
+        toast({
+          title: "Tâche supprimée",
+          description: taskTitle,
+          action: (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                // TODO: Implement undo functionality
+                toast({
+                  title: "Annulation non disponible",
+                  description: "Cette fonctionnalité sera bientôt disponible",
+                });
+              }}
+            >
+              Annuler
+            </Button>
+          ),
+          duration: 3000,
+        });
+      }
+    },
+  });
 
   const playBalloonSounds = () => {
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -164,14 +212,47 @@ export const TaskCard = ({ task, onToggle, onEdit, onSubTaskToggle }: TaskCardPr
   };
 
   return (
-    <div className="relative">
+    <div 
+      className="relative overflow-hidden"
+      {...handlers}
+    >
+      {/* Swipe indicators */}
+      {swipeOffset !== 0 && (
+        <>
+          {/* Right swipe - Complete */}
+          {swipeOffset > 0 && (
+            <div 
+              className="absolute inset-0 bg-success/20 flex items-center justify-start pl-6 rounded-2xl z-0"
+              style={{ opacity: Math.min(Math.abs(swipeOffset) / 100, 1) }}
+            >
+              <CheckCircle2 className="w-6 h-6 text-success" />
+            </div>
+          )}
+          
+          {/* Left swipe - Delete */}
+          {swipeOffset < 0 && (
+            <div 
+              className="absolute inset-0 bg-accent/20 flex items-center justify-end pr-6 rounded-2xl z-0"
+              style={{ opacity: Math.min(Math.abs(swipeOffset) / 100, 1) }}
+            >
+              <Trash2 className="w-6 h-6 text-accent" />
+            </div>
+          )}
+        </>
+      )}
+      
       <BalloonBurst show={showBalloons} onComplete={() => setShowBalloons(false)} />
       
       <Card 
         ref={setNodeRef} 
-        style={style} 
+        style={{
+          ...style,
+          transform: swipeOffset !== 0 
+            ? `translateX(${swipeOffset}px)` 
+            : style.transform,
+        }} 
         className={cn(
-          "p-4 transition-all duration-300 ease-in-out shadow-card hover:shadow-balloon rounded-2xl",
+          "p-4 transition-all duration-300 ease-in-out shadow-card hover:shadow-balloon rounded-2xl relative z-10",
           "bg-gradient-card border-border/50",
           isAnimating && "scale-95 opacity-75",
           isCompleting && "animate-confetti-explosion",
