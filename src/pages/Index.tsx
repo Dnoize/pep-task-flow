@@ -1,22 +1,15 @@
-import { useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { AddTaskForm } from "@/components/AddTaskForm";
 import { TaskColumn } from "@/components/TaskColumn";
 import { TaskEditDialog } from "@/components/TaskEditDialog";
-import { TaskCreationDialog } from "@/components/TaskCreationDialog";
 import { HistoryView } from "@/components/HistoryView";
 import { CompletedInlineSummary } from "@/components/CompletedInlineSummary";
 import { CompletedSidebar } from "@/components/CompletedSidebar";
-import { CompletedCollapsible } from "@/components/CompletedCollapsible";
 import { ProgressRibbon } from "@/components/ProgressRibbon";
-import { FloatingActionButton } from "@/components/FloatingActionButton";
-import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
-import { CompactAddBar } from "@/components/CompactAddBar";
-import { Task } from "@/components/TaskCard";
+import { Task, Priority } from "@/components/TaskCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useTaskStore } from "@/store/taskStore";
-import { useToast } from "@/hooks/use-toast";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { storage } from "@/lib/storage";
+import { maintenanceManager } from "@/lib/maintenance";
 import {
   DndContext, 
   closestCenter,
@@ -32,96 +25,47 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import { useState } from "react";
 
 const Index = () => {
-  const { 
-    tasks, 
-    isLoading,
-    loadTasks,
-    addTask,
-    updateTask,
-    toggleTask,
-    requestDeleteTask,
-    undoDelete,
-    toggleSubTask,
-    addSubTask,
-    reorderSubTasks,
-    deleteSubTask,
-    setTasks
-  } = useTaskStore();
-  
+  const [tasks, setTasks] = useState<Task[]>([]);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isCreationDialogOpen, setIsCreationDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("todo");
-  const [isHeaderCompact, setIsHeaderCompact] = useState(false);
-  const [showFAB, setShowFAB] = useState(true);
-  
-  const addTaskRef = useRef<HTMLDivElement>(null);
-  const compactButtonRef = useRef<HTMLButtonElement>(null);
-  const stickyWrapperRef = useRef<HTMLDivElement>(null);
-  const sentinelRef = useRef<HTMLDivElement>(null);
-  const { toast } = useToast();
-  
-  // Load tasks on mount
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Load tasks from storage on mount
   useEffect(() => {
     loadTasks();
-  }, [loadTasks]);
-
-  // Track sticky state with IntersectionObserver
-  useEffect(() => {
-    const sentinel = sentinelRef.current;
-    if (!sentinel) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setIsHeaderCompact(!entry.isIntersecting);
-      },
-      { threshold: 0, rootMargin: '-1px 0px 0px 0px' }
-    );
-
-    observer.observe(sentinel);
-    return () => observer.disconnect();
   }, []);
 
-  // Validate header height in compact mode
+
+  // Save tasks to storage whenever tasks change
   useEffect(() => {
-    if (isHeaderCompact && stickyWrapperRef.current) {
-      const height = stickyWrapperRef.current.offsetHeight;
-      const svh = window.innerHeight;
-      const percentage = (height / svh) * 100;
-      
-      if (percentage > 12) {
-        console.warn(`⚠️ Header dépasse 12svh: ${percentage.toFixed(1)}% (${height}px)`);
-      } else {
-        console.log(`✅ Header OK: ${percentage.toFixed(1)}% (${height}px)`);
-      }
+    if (!isLoading && tasks.length >= 0) {
+      storage.saveTasks(tasks);
     }
-  }, [isHeaderCompact]);
+  }, [tasks, isLoading]);
 
-  // Track input focus to hide FAB
-  useEffect(() => {
-    const handleFocus = (e: FocusEvent) => {
-      if ((e.target as HTMLElement).tagName === 'INPUT' || (e.target as HTMLElement).tagName === 'TEXTAREA') {
-        setShowFAB(false);
-      }
-    };
-
-    const handleBlur = (e: FocusEvent) => {
-      if ((e.target as HTMLElement).tagName === 'INPUT' || (e.target as HTMLElement).tagName === 'TEXTAREA') {
-        setTimeout(() => setShowFAB(true), 200);
-      }
-    };
-
-    document.addEventListener('focusin', handleFocus);
-    document.addEventListener('focusout', handleBlur);
-    
-    return () => {
-      document.removeEventListener('focusin', handleFocus);
-      document.removeEventListener('focusout', handleBlur);
-    };
-  }, []);
+  const loadTasks = async () => {
+    try {
+      setIsLoading(true);
+      await storage.init();
+      const storedTasks = await storage.getAllTasks();
+      
+      // Convert date strings back to Date objects
+      const tasksWithDates = storedTasks.map(task => ({
+        ...task,
+        createdAt: new Date(task.createdAt),
+        completedAt: task.completedAt ? new Date(task.completedAt) : undefined
+      }));
+      
+      setTasks(sortTasksByPriority(tasksWithDates));
+    } catch (error) {
+      console.error('Failed to load tasks:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -140,9 +84,29 @@ const Index = () => {
     });
   };
 
-  const handleFABClick = () => {
-    setActiveTab("todo");
-    setIsCreationDialogOpen(true);
+  const addTask = (title: string, description?: string, priority: Priority = "medium") => {
+    const newTask: Task = {
+      id: Date.now().toString(),
+      title,
+      description,
+      priority,
+      completed: false,
+      createdAt: new Date(),
+    };
+    const updatedTasks = [newTask, ...tasks];
+    setTasks(sortTasksByPriority(updatedTasks));
+  };
+
+  const toggleTask = (id: string) => {
+    setTasks(tasks.map(task => 
+      task.id === id 
+        ? { 
+            ...task, 
+            completed: !task.completed,
+            completedAt: !task.completed ? new Date() : undefined
+          }
+        : task
+    ));
   };
 
   const handleEditTask = (task: Task) => {
@@ -155,37 +119,6 @@ const Index = () => {
       task.id === updatedTask.id ? updatedTask : task
     );
     setTasks(sortTasksByPriority(updatedTasks));
-  };
-
-  const handleDeleteTask = (id: string) => {
-    const task = tasks.find(t => t.id === id);
-    if (!task) return;
-    
-    requestDeleteTask(id);
-    
-    // Show toast with undo
-    toast({
-      title: "Tâche supprimée",
-      description: task.title,
-      action: (
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => {
-            undoDelete(id);
-            toast({
-              title: "Tâche restaurée",
-              description: task.title,
-            });
-          }}
-          className="min-h-[44px] min-w-[80px]"
-          data-testid="toast-undo"
-        >
-          Annuler
-        </Button>
-      ),
-      duration: 3000,
-    });
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -205,7 +138,16 @@ const Index = () => {
     if (overId === 'todo' || overId === 'done') {
       const shouldComplete = overId === 'done';
       if (activeTask.completed !== shouldComplete) {
-        toggleTask(activeId as string);
+        const updatedTasks = tasks.map(task => 
+          task.id === activeId 
+            ? { 
+                ...task, 
+                completed: shouldComplete,
+                completedAt: shouldComplete ? new Date() : undefined
+              }
+            : task
+        );
+        setTasks(sortTasksByPriority(updatedTasks));
       }
       return;
     }
@@ -215,8 +157,7 @@ const Index = () => {
     const newIndex = tasks.findIndex(task => task.id === overId);
     
     if (oldIndex !== -1 && newIndex !== -1) {
-      const reordered = arrayMove(tasks, oldIndex, newIndex);
-      setTasks(reordered);
+      setTasks(arrayMove(tasks, oldIndex, newIndex));
     }
   };
 
@@ -225,10 +166,26 @@ const Index = () => {
     setEditingTask(null);
   };
 
+  const handleSubTaskToggle = (taskId: string, subTaskId: string) => {
+    setTasks(tasks.map(task => {
+      if (task.id === taskId && task.subTasks) {
+        return {
+          ...task,
+          subTasks: task.subTasks.map(subTask =>
+            subTask.id === subTaskId
+              ? { ...subTask, completed: !subTask.completed }
+              : subTask
+          )
+        };
+      }
+      return task;
+    }));
+  };
+
   const sortedTasks = sortTasksByPriority(tasks);
   const todoTasks = sortedTasks.filter(task => !task.completed);
   
-  // Only show tasks completed today
+  // Only show tasks completed today in "Terminées (Aujourd'hui)"
   const today = new Date();
   const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
   const doneTasks = sortedTasks.filter(task => {
@@ -254,178 +211,64 @@ const Index = () => {
       collisionDetection={closestCenter}
       onDragEnd={handleDragEnd}
     >
-      <div 
-        className="min-h-screen bg-background"
-        style={{
-          paddingBottom: 'calc(84px + env(safe-area-inset-bottom))',
-          minHeight: '100dvh',
-          overscrollBehaviorY: 'contain'
-        }}
-      >
+      <div className="min-h-screen bg-background">
         <div className="max-w-6xl mx-auto p-4">
-          {/* Sentinel for IntersectionObserver */}
-          <div ref={sentinelRef} className="h-1 -mt-1" aria-hidden="true" />
-          
-          {/* Sticky Header */}
-          <div 
-            ref={stickyWrapperRef}
-            className={cn(
-              "relative sticky top-0 z-40 bg-slate-50/95 backdrop-blur-md supports-[backdrop-filter]:bg-slate-50/80 border-b border-slate-200",
-              "transition-all duration-300 ease-out will-change-[max-height]",
-              "-mx-4 px-4",
-              "py-1 lg:py-4 overflow-visible",
-              "[--hdr:12svh] lg:[--hdr:none]",
-              "max-h-[var(--hdr)] lg:max-h-none"
-            )}
-          >
-            {/* Decorative balloons - positioned absolutely to avoid clipping */}
-            <div 
-              className="absolute right-0 top-0 pointer-events-none overflow-visible"
-              style={{
-                width: 'clamp(140px, 32vw, 220px)',
-                height: '200px',
-                right: '-24px',
-                top: '-16px',
-                zIndex: 1,
-                opacity: 0.05
-              }}
-              aria-hidden="true"
-            >
-              <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
-                <ellipse cx="40" cy="50" rx="18" ry="24" fill="#60A5FA" opacity="1"/>
-                <ellipse cx="140" cy="100" rx="15" ry="22" fill="#34D399" opacity="1.2"/>
-                <ellipse cx="100" cy="150" rx="12" ry="18" fill="#FB7185" opacity="0.8"/>
-              </svg>
-            </div>
-            <div className="text-center relative z-10">
-              <h1 className={cn(
-                "font-bold transition-all duration-300 ease-out",
-                isHeaderCompact 
-                  ? 'text-sm font-semibold leading-none mb-0' 
-                  : 'text-lg sm:text-xl lg:text-5xl mb-1 lg:mb-2 leading-tight'
-              )}
-              style={{
-                background: 'linear-gradient(to right, #0284c7, #059669)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-              }}>
-                {isHeaderCompact ? 'Balloon Tasks' : '🎈 Balloon Tasks 🎈'}
-              </h1>
-              {!isHeaderCompact && (
-                <p className="hidden lg:block text-muted-foreground mb-2 lg:mb-3 text-xs lg:text-base">
-                  Organisez vos tâches avec légèreté et motivation
-                </p>
-              )}
-              
-              {/* Progress ribbon */}
-              <ProgressRibbon 
-                progress={tasks.length > 0 ? (doneTasks.length / tasks.length) * 100 : 0}
-                totalTasks={tasks.length}
-                completedTasks={doneTasks.length}
-                compact={isHeaderCompact}
-                data-testid="progress-percent"
-              />
-            </div>
-
-            {/* Tabs */}
-            <div className={cn("relative z-30 transition-all", isHeaderCompact ? "mt-0.5 mb-2" : "mt-1.5 lg:mt-2 mb-2")}>
-              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className={cn(
-                  "grid w-full grid-cols-3",
-                  isHeaderCompact ? "h-8 text-[11px]" : "h-9 lg:h-10 text-sm"
-                )}>
-                  <TabsTrigger 
-                    value="todo" 
-                    className={cn("gap-1.5", isHeaderCompact ? "text-[11px]" : "text-xs sm:text-sm")} 
-                    data-testid="tab-todo"
-                  >
-                    <span>À faire</span>
-                    <span className={cn(
-                      "bg-sky-100 text-sky-800 px-1.5 py-0.5 rounded-full font-semibold",
-                      isHeaderCompact ? "text-[9px]" : "text-[10px] sm:text-xs"
-                    )}>
-                      {todoTasks.length}
-                    </span>
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="done" 
-                    className={cn("gap-1.5", isHeaderCompact ? "text-[11px]" : "text-xs sm:text-sm")} 
-                    data-testid="tab-done"
-                  >
-                    <span className="hidden sm:inline">Terminées</span>
-                    <span className="sm:hidden">✓</span>
-                    <span className={cn(
-                      "bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded-full font-semibold",
-                      isHeaderCompact ? "text-[9px]" : "text-[10px] sm:text-xs"
-                    )}>
-                      {doneTasks.length}
-                    </span>
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="history" 
-                    className={cn("gap-1", isHeaderCompact ? "text-[11px]" : "text-xs sm:text-sm")} 
-                    data-testid="tab-history"
-                  >
-                    <span className="hidden sm:inline">Historique</span>
-                    <span className="sm:hidden">📅</span>
-                  </TabsTrigger>
-                </TabsList>
-              </Tabs>
-            </div>
-
-            {/* Compact Add Bar - Mobile only, shown when compact */}
-            {isHeaderCompact && activeTab === "todo" && (
-              <div className="lg:hidden mt-2">
-                <CompactAddBar
-                  ref={compactButtonRef}
-                  onAdd={() => {
-                    setIsCreationDialogOpen(true);
-                  }}
-                  visible={isHeaderCompact}
-                />
-              </div>
-            )}
+          <div className="text-center mb-8">
+            <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary via-success to-accent bg-clip-text text-transparent mb-4">
+              🎈 Balloon Tasks 🎈
+            </h1>
+            <p className="text-muted-foreground mb-4">
+              Organisez vos tâches avec légèreté et motivation
+            </p>
+            
+            {/* Balloon ribbon progress bar */}
+            <ProgressRibbon 
+              progress={tasks.length > 0 ? (doneTasks.length / tasks.length) * 100 : 0}
+              totalTasks={tasks.length}
+              completedTasks={doneTasks.length}
+            />
           </div>
 
-          <div className="relative space-y-4 mt-5">
+          <div className="space-y-6">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsContent value="todo" className="mt-0 space-y-4">
-                {!isHeaderCompact && (
-                  <div ref={addTaskRef} className="pt-8">
-                    <AddTaskForm onAdd={addTask} />
-                  </div>
-                )}
+              <TabsList className="grid w-full grid-cols-3 mb-6">
+                <TabsTrigger value="todo" className="gap-2">
+                  À faire 
+                  <span className="bg-secondary/20 text-secondary px-2 py-0.5 rounded-full text-xs">
+                    {todoTasks.length}
+                  </span>
+                </TabsTrigger>
+                <TabsTrigger value="done" className="gap-2">
+                  Terminées (Aujourd'hui)
+                  <span className="bg-success/20 text-success px-2 py-0.5 rounded-full text-xs">
+                    {doneTasks.length}
+                  </span>
+                </TabsTrigger>
+                <TabsTrigger value="history">
+                  Historique
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="todo" className="mt-0 space-y-6">
+                <AddTaskForm onAdd={addTask} />
                 
-                <div className="grid gap-4 lg:gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
-                  <div className="space-y-4 lg:space-y-6">
+                <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+                  <div className="space-y-6">
                     <CompletedInlineSummary 
                       tasks={doneTasks} 
                       max={5}
                       onViewAll={() => setActiveTab("done")}
                     />
-                    
-                    {/* Mobile Collapsible */}
-                    <CompletedCollapsible 
-                      tasks={doneTasks}
-                      onViewAll={() => setActiveTab("done")}
-                    />
-                    
                     <TaskColumn
                       title="À FAIRE"
                       tasks={todoTasks}
                       onToggleTask={toggleTask}
                       onEditTask={handleEditTask}
-                      onSubTaskToggle={toggleSubTask}
-                      onDeleteTask={handleDeleteTask}
-                      onAddSubTask={addSubTask}
-                      onReorderSubTasks={reorderSubTasks}
-                      onDeleteSubTask={deleteSubTask}
+                      onSubTaskToggle={handleSubTaskToggle}
                       type="todo"
                     />
                   </div>
                   
-                  {/* Desktop Sidebar */}
                   <CompletedSidebar 
                     tasks={doneTasks}
                     onViewAll={() => setActiveTab("done")}
@@ -433,24 +276,22 @@ const Index = () => {
                 </div>
               </TabsContent>
 
-              <TabsContent value="done" className="mt-0 space-y-4 lg:space-y-6">
+              <TabsContent value="done" className="mt-0 space-y-6">
                 <TaskColumn
                   title="TERMINÉES (AUJOURD'HUI)"
                   tasks={doneTasks}
                   onToggleTask={toggleTask}
                   onEditTask={handleEditTask}
-                  onSubTaskToggle={toggleSubTask}
-                  onAddSubTask={addSubTask}
-                  onReorderSubTasks={reorderSubTasks}
-                  onDeleteSubTask={deleteSubTask}
+                  onSubTaskToggle={handleSubTaskToggle}
                   type="done"
                 />
               </TabsContent>
 
-              <TabsContent value="history" className="mt-0 space-y-4 lg:space-y-6">
+              <TabsContent value="history" className="mt-0 space-y-6">
                 <HistoryView onRefresh={loadTasks} />
               </TabsContent>
             </Tabs>
+
           </div>
 
           {/* Task Edit Dialog */}
@@ -459,31 +300,6 @@ const Index = () => {
             open={isEditDialogOpen}
             onClose={handleCloseDialog}
             onSave={handleSaveTask}
-          />
-          
-          {/* Task Creation Dialog (Mobile) */}
-          <TaskCreationDialog
-            open={isCreationDialogOpen}
-            onClose={() => setIsCreationDialogOpen(false)}
-            onAdd={addTask}
-          />
-          
-          {/* Floating Action Button (Mobile Only) */}
-          <FloatingActionButton 
-            onClick={handleFABClick} 
-            visible={showFAB}
-            data-testid="fab-add"
-          />
-          
-          {/* PWA Install Prompt */}
-          <PWAInstallPrompt />
-          
-          {/* QA Button - Hidden */}
-          <button
-            onClick={() => (window as any).runMidnightMaintenance?.()}
-            data-testid="btn-maintenance"
-            className="hidden"
-            aria-hidden="true"
           />
         </div>
       </div>

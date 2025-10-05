@@ -2,54 +2,54 @@ interface ProgressRibbonProps {
   progress: number;
   totalTasks: number;
   completedTasks: number;
-  compact?: boolean;
 }
 
-export const ProgressRibbon = ({ progress, totalTasks, completedTasks, compact = false }: ProgressRibbonProps) => {
-  if (compact) {
-    // Ultra-compact inline version
-    return (
-      <div className="max-w-md mx-auto mb-0.5" data-testid="progress-percent">
-        <div className="flex items-center gap-2">
-          <div className="flex-1 h-1.5 bg-slate-200 rounded-full overflow-hidden">
-            <div 
-              className="h-full bg-gradient-to-r from-sky-400 to-emerald-400 rounded-full transition-all duration-500 ease-out"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-          <span className="text-[10px] font-medium text-slate-500 tabular-nums min-w-[32px] text-right">
-            {Math.round(progress)}%
-          </span>
-        </div>
-      </div>
-    );
-  }
-
-  // Normal version
+export const ProgressRibbon = ({ progress, totalTasks, completedTasks }: ProgressRibbonProps) => {
   return (
-    <div className="max-w-md mx-auto mb-2 lg:mb-4" data-testid="progress-percent">
-      <div className="flex justify-between text-xs text-muted-foreground mb-1">
-        <span className="flex items-center gap-1.5">
-          <span className="text-xs">🎈</span>
-          <span className="font-medium">Progression</span>
+    <div className="max-w-md mx-auto mb-6">
+      <div className="flex justify-between text-sm text-muted-foreground mb-2">
+        <span className="flex items-center gap-2">
+          <span>🎈</span>
+          <span className="font-medium">Progression du jour</span>
         </span>
-        <span className="font-semibold tabular-nums">{Math.round(progress)}%</span>
+        <span className="font-semibold">{Math.round(progress)}%</span>
       </div>
       
-      <div className="relative w-full bg-muted rounded-full h-2 overflow-visible">
+      <div className="relative w-full bg-muted rounded-full h-3 overflow-visible">
         {/* Progress bar */}
         <div 
-          className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-primary to-success transition-all duration-500 ease-out"
+          className="h-full bg-gradient-to-r from-primary to-success transition-all duration-500 ease-out rounded-full"
           style={{ width: `${progress}%` }}
         />
         
-        {/* Discrete dot marker - smaller and more subtle */}
+        {/* Balloon indicator */}
         <div 
-          className="absolute -top-[2px] size-2.5 rounded-full bg-sky-600 shadow-sm transition-all duration-500 ease-out"
-          style={{ left: `calc(${progress}% - 5px)` }}
-          aria-hidden="true"
-          title={`${completedTasks} / ${totalTasks}`}
-        />
+          className="absolute -top-5 transition-all duration-500 ease-out"
+          style={{ 
+            left: `calc(${progress}% - 16px)`,
+            transform: 'translateY(-2px)',
+          }}
+        >
+          <div className="relative group">
+            <svg width="32" height="40" viewBox="0 0 32 40" fill="none" className="drop-shadow-md">
+              <ellipse cx="16" cy="14" rx="14" ry="17" fill="url(#balloonGradient)" />
+              <path d="M16 31 Q15 34, 16 38" stroke="#60A5FA" strokeWidth="1.5" opacity="0.7" />
+              <defs>
+                <linearGradient id="balloonGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#60A5FA" stopOpacity="1" />
+                  <stop offset="100%" stopColor="#34D399" stopOpacity="0.9" />
+                </linearGradient>
+              </defs>
+            </svg>
+            
+            {/* Tooltip */}
+            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+              <div className="bg-foreground text-background text-xs px-2 py-1 rounded whitespace-nowrap">
+                {completedTasks} / {totalTasks}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -1,11 +1,7 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { useSwipe } from "@/hooks/useSwipe";
-import { Trash2, CheckCircle2 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
 import {
   useSortable,
 } from '@dnd-kit/sortable';
@@ -14,7 +10,6 @@ import {
 } from '@dnd-kit/utilities';
 import { GripVertical } from "lucide-react";
 import { BalloonBurst } from "./BalloonBurst";
-import { SubTaskList } from "./SubTaskList";
 
 export type Priority = "low" | "medium" | "high";
 
@@ -22,9 +17,6 @@ export interface SubTask {
   id: string;
   text: string;
   completed: boolean;
-  createdAt: Date;
-  completedAt?: Date;
-  order?: number;
 }
 
 export interface Task {
@@ -43,72 +35,13 @@ interface TaskCardProps {
   onToggle: (id: string) => void;
   onEdit: (task: Task) => void;
   onSubTaskToggle: (taskId: string, subTaskId: string) => void;
-  onDelete?: (id: string) => void;
-  onAddSubTask?: (taskId: string, title: string) => void;
-  onReorderSubTasks?: (taskId: string, oldIndex: number, newIndex: number) => void;
-  onDeleteSubTask?: (taskId: string, subTaskId: string) => void;
 }
 
-export const TaskCard = ({ task, onToggle, onEdit, onSubTaskToggle, onDelete, onAddSubTask, onReorderSubTasks, onDeleteSubTask }: TaskCardProps) => {
+export const TaskCard = ({ task, onToggle, onEdit, onSubTaskToggle }: TaskCardProps) => {
   const [isAnimating, setIsAnimating] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
   const [showBalloons, setShowBalloons] = useState(false);
-  const { toast } = useToast();
-  
-  // Swipe gestures
-  const { swipeOffset, handlers } = useSwipe({
-    onSwipeRight: () => {
-      if (!task.completed && onToggle) {
-        handleToggle();
-        
-        // Haptic feedback on mobile
-        if ('vibrate' in navigator && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-          navigator.vibrate(10);
-        }
-      }
-    },
-    onSwipeLeft: () => {
-      if (onDelete) {
-        const taskTitle = task.title;
-        let undoTimeout: NodeJS.Timeout;
-        
-        // Store task for potential undo
-        const taskSnapshot = { ...task };
-        
-        // Delete task immediately with visual feedback
-        onDelete(task.id);
-        
-        // Show undo toast
-        toast({
-          title: "Tâche supprimée",
-          description: taskTitle,
-          action: (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                clearTimeout(undoTimeout);
-                toast({
-                  title: "Fonctionnalité d'annulation",
-                  description: "L'annulation nécessite une refonte de l'architecture de stockage",
-                });
-              }}
-              className="min-h-[44px] min-w-[80px]"
-            >
-              Annuler
-            </Button>
-          ),
-          duration: 3000,
-        });
-        
-        // Auto-dismiss after 3s
-        undoTimeout = setTimeout(() => {
-          // Task permanently deleted after timeout
-        }, 3000);
-      }
-    },
-  });
 
   const playBalloonSounds = () => {
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -231,54 +164,20 @@ export const TaskCard = ({ task, onToggle, onEdit, onSubTaskToggle, onDelete, on
   };
 
   return (
-    <div 
-      className="relative overflow-hidden"
-      {...handlers}
-    >
-      {/* Swipe indicators */}
-      {swipeOffset !== 0 && (
-        <>
-          {/* Right swipe - Complete */}
-          {swipeOffset > 0 && (
-            <div 
-              className="absolute inset-0 bg-success/20 flex items-center justify-start pl-6 rounded-2xl z-0"
-              style={{ opacity: Math.min(Math.abs(swipeOffset) / 100, 1) }}
-            >
-              <CheckCircle2 className="w-6 h-6 text-success" />
-            </div>
-          )}
-          
-          {/* Left swipe - Delete */}
-          {swipeOffset < 0 && (
-            <div 
-              className="absolute inset-0 bg-accent/20 flex items-center justify-end pr-6 rounded-2xl z-0"
-              style={{ opacity: Math.min(Math.abs(swipeOffset) / 100, 1) }}
-            >
-              <Trash2 className="w-6 h-6 text-accent" />
-            </div>
-          )}
-        </>
-      )}
-      
+    <div className="relative">
       <BalloonBurst show={showBalloons} onComplete={() => setShowBalloons(false)} />
       
       <Card 
         ref={setNodeRef} 
-        style={{
-          ...style,
-          transform: swipeOffset !== 0 
-            ? `translateX(${swipeOffset}px)` 
-            : style.transform,
-        }} 
+        style={style} 
         className={cn(
-          "py-2 px-3 transition-all duration-300 ease-in-out shadow-card hover:shadow-balloon rounded-2xl relative z-10",
+          "p-4 transition-all duration-300 ease-in-out shadow-card hover:shadow-balloon rounded-2xl",
           "bg-gradient-card border-border/50",
           isAnimating && "scale-95 opacity-75",
           isCompleting && "animate-confetti-explosion",
           task.completed && "bg-gradient-success shadow-success",
           isDragging && "opacity-50 scale-95 z-50"
         )}
-        data-testid="task-item"
       >
         {showCelebration && (
           <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 z-10">
@@ -287,50 +186,32 @@ export const TaskCard = ({ task, onToggle, onEdit, onSubTaskToggle, onDelete, on
             </div>
           </div>
         )}
-      <div 
-        className="flex items-start gap-2 cursor-pointer"
-        onClick={() => onEdit(task)}
-      >
+      <div className="flex items-start gap-3">
         <div 
-          className="cursor-grab active:cursor-grabbing mt-0.5 opacity-40 hover:opacity-80 transition-opacity -m-2 p-2"
-          onClick={(e) => e.stopPropagation()}
+          className="cursor-grab active:cursor-grabbing mt-1 opacity-40 hover:opacity-80 transition-opacity"
           {...attributes}
           {...listeners}
         >
           <GripVertical className="h-4 w-4 text-muted-foreground" />
         </div>
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            handleToggle();
-          }}
-          className="-m-2 p-2 min-h-[44px] min-w-[44px] flex items-center justify-center"
-          aria-label={task.completed ? `Marquer "${task.title}" comme non terminée` : `Marquer "${task.title}" comme terminée`}
-          data-testid="task-check"
-        >
-          <Checkbox
-            checked={task.completed}
-            className={cn(
-              "h-5 w-5 rounded-md pointer-events-none data-[state=checked]:bg-success data-[state=checked]:border-success transition-all duration-300",
-              isCompleting && "animate-checkmark"
-            )}
-            role="checkbox"
-            aria-live="polite"
-          />
-        </button>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between gap-2 mb-1">
-            <p 
-              className={cn(
-                "text-[15px] font-medium leading-snug tracking-tight transition-all duration-200",
-                task.completed ? "text-success-foreground line-through" : "text-card-foreground"
-              )}
-              data-testid="task-title"
-            >
+        <Checkbox
+          checked={task.completed}
+          onCheckedChange={handleToggle}
+          className={cn(
+            "mt-1 data-[state=checked]:bg-success data-[state=checked]:border-success transition-all duration-300",
+            isCompleting && "animate-checkmark"
+          )}
+        />
+        <div className="flex-1 min-w-0 cursor-pointer" onClick={() => onEdit(task)}>
+          <div className="flex items-start justify-between gap-2 mb-2">
+            <p className={cn(
+              "text-sm font-medium leading-relaxed transition-all duration-200",
+              task.completed ? "text-success-foreground line-through" : "text-card-foreground"
+            )}>
               {task.title}
             </p>
             <span className={cn(
-              "shrink-0 text-[11px]",
+              "shrink-0",
               getPriorityColor(task.priority)
             )}>
               {getPriorityLabel(task.priority)}
@@ -339,29 +220,48 @@ export const TaskCard = ({ task, onToggle, onEdit, onSubTaskToggle, onDelete, on
           
           {task.description && (
             <p className={cn(
-              "text-sm text-muted-foreground mb-1.5 line-clamp-2 leading-snug",
+              "text-xs text-muted-foreground mb-2 line-clamp-2",
               task.completed && "line-through"
             )}>
               {task.description}
             </p>
           )}
 
-          {onAddSubTask && onReorderSubTasks && onDeleteSubTask && (
-            <div className="my-1.5" onClick={(e) => e.stopPropagation()}>
-              <SubTaskList
-                taskId={task.id}
-                subTasks={task.subTasks || []}
-                onToggle={onSubTaskToggle}
-                onAdd={onAddSubTask}
-                onReorder={onReorderSubTasks}
-                onDelete={onDeleteSubTask}
-              />
+          {task.subTasks && task.subTasks.length > 0 && (
+            <div className="mb-3 space-y-2 p-2 bg-muted/30 rounded-md border border-border/50">
+              <div className="text-xs font-medium text-muted-foreground mb-1">
+                Sous-tâches ({task.subTasks.filter(st => st.completed).length}/{task.subTasks.length})
+              </div>
+              {task.subTasks.map((subTask) => (
+                <div key={subTask.id} className="flex items-center gap-2 py-1 group">
+                  <Checkbox
+                    checked={subTask.completed}
+                    onCheckedChange={() => onSubTaskToggle(task.id, subTask.id)}
+                    className="h-3 w-3 data-[state=checked]:bg-success data-[state=checked]:border-success"
+                  />
+                  <span className={cn(
+                    "text-xs flex-1 cursor-pointer",
+                    subTask.completed 
+                      ? "text-success line-through opacity-70" 
+                      : "text-card-foreground hover:text-primary transition-colors"
+                  )}>
+                    {subTask.text}
+                  </span>
+                  <div className="w-4 h-4 rounded-full flex items-center justify-center transition-colors">
+                    {subTask.completed ? (
+                      <div className="w-2 h-2 bg-success rounded-full"></div>
+                    ) : (
+                      <div className="w-2 h-2 border border-muted-foreground/30 rounded-full group-hover:border-primary/50"></div>
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
           )}
           
-          <div className="flex justify-between items-center text-xs mt-1.5">
+          <div className="flex justify-between items-center text-xs">
             <span className={cn(
-              "px-2 py-0.5 rounded-full text-[10px]",
+              "px-2 py-1 rounded-full",
               task.completed 
                 ? "bg-success/20 text-success-foreground" 
                 : "bg-primary/20 text-primary"
@@ -369,7 +269,7 @@ export const TaskCard = ({ task, onToggle, onEdit, onSubTaskToggle, onDelete, on
               Créé: {formatDate(task.createdAt)}
             </span>
             {task.completedAt && (
-              <span className="px-2 py-0.5 rounded-full bg-success/20 text-success-foreground text-[10px]">
+              <span className="px-2 py-1 rounded-full bg-success/20 text-success-foreground">
                 Terminé: {formatDate(task.completedAt)}
               </span>
             )}
