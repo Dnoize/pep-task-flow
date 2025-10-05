@@ -329,7 +329,7 @@ const Index = () => {
             </div>
 
             {/* Tabs */}
-            <div className={cn("transition-all", isHeaderCompact ? "mt-0.5 mb-0" : "mt-1.5 lg:mt-2")}>
+            <div className={cn("transition-all", isHeaderCompact ? "mt-0.5 mb-2" : "mt-1.5 lg:mt-2 mb-2")}>
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                 <TabsList className={cn(
                   "grid w-full grid-cols-3",
