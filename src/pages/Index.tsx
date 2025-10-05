@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { AddTaskForm } from "@/components/AddTaskForm";
 import { TaskColumn } from "@/components/TaskColumn";
 import { TaskEditDialog } from "@/components/TaskEditDialog";
+import { TaskCreationDialog } from "@/components/TaskCreationDialog";
 import { HistoryView } from "@/components/HistoryView";
 import { CompletedInlineSummary } from "@/components/CompletedInlineSummary";
 import { CompletedSidebar } from "@/components/CompletedSidebar";
@@ -15,6 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTaskStore } from "@/store/taskStore";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import {
   DndContext, 
   closestCenter,
@@ -51,6 +53,7 @@ const Index = () => {
   
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isCreationDialogOpen, setIsCreationDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("todo");
   const [isHeaderCompact, setIsHeaderCompact] = useState(false);
   const [showFAB, setShowFAB] = useState(true);
@@ -124,19 +127,7 @@ const Index = () => {
 
   const handleFABClick = () => {
     setActiveTab("todo");
-    
-    if (isHeaderCompact && compactInputRef.current) {
-      setTimeout(() => {
-        compactInputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        compactInputRef.current?.focus();
-      }, 100);
-    } else {
-      setTimeout(() => {
-        addTaskRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        const input = addTaskRef.current?.querySelector('input');
-        input?.focus();
-      }, 100);
-    }
+    setIsCreationDialogOpen(true);
   };
 
   const handleEditTask = (task: Task) => {
@@ -263,19 +254,23 @@ const Index = () => {
           {/* Sticky Header */}
           <div 
             ref={stickyWrapperRef}
-            className={`sticky top-0 z-40 bg-slate-50/80 backdrop-blur-md supports-[backdrop-filter]:bg-slate-50/60 border-b border-slate-200 transition-all duration-300 -mx-4 px-4 ${
-              isHeaderCompact ? 'py-2' : 'py-4'
-            }`}
+            className={cn(
+              "sticky top-0 z-40 bg-slate-50/80 backdrop-blur-md supports-[backdrop-filter]:bg-slate-50/60 border-b border-slate-200 transition-all duration-300 -mx-4 px-4 overflow-visible",
+              isHeaderCompact ? 'py-2' : 'py-3 lg:py-4',
+              "lg:max-h-none max-h-[15svh]"
+            )}
             style={{
-              backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'100\' height=\'100\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cellipse cx=\'20\' cy=\'30\' rx=\'15\' ry=\'20\' fill=\'%2360A5FA\' opacity=\'0.04\'/%3E%3Cellipse cx=\'70\' cy=\'60\' rx=\'12\' ry=\'18\' fill=\'%2334D399\' opacity=\'0.05\'/%3E%3Cellipse cx=\'50\' cy=\'80\' rx=\'10\' ry=\'15\' fill=\'%23FB7185\' opacity=\'0.04\'/%3E%3C/svg%3E")',
-              backgroundSize: '200px 200px',
-              backgroundRepeat: 'repeat'
+              backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'200\' height=\'200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cellipse cx=\'40\' cy=\'50\' rx=\'18\' ry=\'24\' fill=\'%2360A5FA\' opacity=\'0.03\'/%3E%3Cellipse cx=\'140\' cy=\'100\' rx=\'15\' ry=\'22\' fill=\'%2334D399\' opacity=\'0.04\'/%3E%3Cellipse cx=\'100\' cy=\'150\' rx=\'12\' ry=\'18\' fill=\'%23FB7185\' opacity=\'0.03\'/%3E%3C/svg%3E")',
+              backgroundSize: 'clamp(140px, 32vw, 220px) auto',
+              backgroundPosition: 'right -24px top -16px',
+              backgroundRepeat: 'no-repeat'
             }}
           >
-            <div className="text-center">
-              <h1 className={`font-bold transition-all duration-300 ${
-                isHeaderCompact ? 'text-2xl mb-2' : 'text-4xl md:text-5xl mb-4'
-              }`}
+            <div className="text-center relative z-10">
+              <h1 className={cn(
+                "font-bold transition-all duration-300",
+                isHeaderCompact ? 'text-lg mb-1' : 'text-3xl md:text-4xl lg:text-5xl mb-3'
+              )}
               style={{
                 background: 'linear-gradient(to right, #60A5FA, #34D399)',
                 WebkitBackgroundClip: 'text',
@@ -285,7 +280,7 @@ const Index = () => {
                 🎈 Balloon Tasks 🎈
               </h1>
               {!isHeaderCompact && (
-                <p className="text-muted-foreground mb-4">
+                <p className="text-muted-foreground mb-3 text-sm lg:text-base">
                   Organisez vos tâches avec légèreté et motivation
                 </p>
               )}
@@ -300,9 +295,9 @@ const Index = () => {
             </div>
 
             {/* Tabs */}
-            <div className="mt-4">
+            <div className={cn("transition-all", isHeaderCompact ? "mt-2" : "mt-3")}>
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="grid w-full grid-cols-3 mb-4">
+                <TabsList className={cn("grid w-full grid-cols-3", isHeaderCompact ? "mb-2 h-9" : "mb-3 h-11")}>
                   <TabsTrigger value="todo" className="gap-2" data-testid="tab-todo">
                     À faire 
                     <span className="bg-sky-100 text-sky-800 px-2 py-0.5 rounded-full text-xs font-semibold">
@@ -326,14 +321,19 @@ const Index = () => {
               </Tabs>
             </div>
 
-            {/* Compact Add Bar */}
+            {/* Compact Add Bar - Mobile only */}
             {isHeaderCompact && activeTab === "todo" && (
-              <CompactAddBar
-                ref={compactInputRef}
-                onAdd={(title) => addTask(title)}
-                visible={isHeaderCompact}
-                className="mb-3"
-              />
+              <div className="lg:hidden">
+                <CompactAddBar
+                  ref={compactInputRef}
+                  onAdd={(title) => {
+                    // Open creation dialog on mobile instead
+                    setIsCreationDialogOpen(true);
+                  }}
+                  visible={isHeaderCompact}
+                  className="mb-2"
+                />
+              </div>
             )}
           </div>
 
@@ -410,10 +410,17 @@ const Index = () => {
             onSave={handleSaveTask}
           />
           
+          {/* Task Creation Dialog (Mobile) */}
+          <TaskCreationDialog
+            open={isCreationDialogOpen}
+            onClose={() => setIsCreationDialogOpen(false)}
+            onAdd={addTask}
+          />
+          
           {/* Floating Action Button (Mobile Only) */}
           <FloatingActionButton 
             onClick={handleFABClick} 
-            visible={showFAB && !isHeaderCompact}
+            visible={showFAB}
             data-testid="fab-add"
           />
           
