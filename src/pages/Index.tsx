@@ -256,11 +256,11 @@ const Index = () => {
             ref={stickyWrapperRef}
             className={cn(
               "sticky top-0 z-40 bg-slate-50/80 backdrop-blur-md supports-[backdrop-filter]:bg-slate-50/60 border-b border-slate-200 transition-all duration-300 -mx-4 px-4 overflow-visible",
-              isHeaderCompact ? 'py-2' : 'py-3 lg:py-4',
-              "lg:max-h-none max-h-[15svh]"
+              isHeaderCompact ? 'py-2' : 'py-2 lg:py-4',
+              "[--hdr:15svh] max-h-[var(--hdr)] lg:max-h-none"
             )}
             style={{
-              backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'200\' height=\'200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cellipse cx=\'40\' cy=\'50\' rx=\'18\' ry=\'24\' fill=\'%2360A5FA\' opacity=\'0.03\'/%3E%3Cellipse cx=\'140\' cy=\'100\' rx=\'15\' ry=\'22\' fill=\'%2334D399\' opacity=\'0.04\'/%3E%3Cellipse cx=\'100\' cy=\'150\' rx=\'12\' ry=\'18\' fill=\'%23FB7185\' opacity=\'0.03\'/%3E%3C/svg%3E")',
+              backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'200\' height=\'200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cellipse cx=\'40\' cy=\'50\' rx=\'18\' ry=\'24\' fill=\'%2360A5FA\' opacity=\'0.05\'/%3E%3Cellipse cx=\'140\' cy=\'100\' rx=\'15\' ry=\'22\' fill=\'%2334D399\' opacity=\'0.06\'/%3E%3Cellipse cx=\'100\' cy=\'150\' rx=\'12\' ry=\'18\' fill=\'%23FB7185\' opacity=\'0.04\'/%3E%3C/svg%3E")',
               backgroundSize: 'clamp(140px, 32vw, 220px) auto',
               backgroundPosition: 'right -24px top -16px',
               backgroundRepeat: 'no-repeat'
@@ -269,7 +269,7 @@ const Index = () => {
             <div className="text-center relative z-10">
               <h1 className={cn(
                 "font-bold transition-all duration-300",
-                isHeaderCompact ? 'text-lg mb-1' : 'text-3xl md:text-4xl lg:text-5xl mb-3'
+                isHeaderCompact ? 'text-lg mb-1 leading-tight' : 'text-2xl md:text-3xl lg:text-5xl mb-2 lg:mb-3'
               )}
               style={{
                 background: 'linear-gradient(to right, #60A5FA, #34D399)',
@@ -280,7 +280,7 @@ const Index = () => {
                 🎈 Balloon Tasks 🎈
               </h1>
               {!isHeaderCompact && (
-                <p className="text-muted-foreground mb-3 text-sm lg:text-base">
+                <p className="text-muted-foreground mb-2 lg:mb-3 text-xs lg:text-base">
                   Organisez vos tâches avec légèreté et motivation
                 </p>
               )}
@@ -295,27 +295,26 @@ const Index = () => {
             </div>
 
             {/* Tabs */}
-            <div className={cn("transition-all", isHeaderCompact ? "mt-2" : "mt-3")}>
+            <div className={cn("transition-all", isHeaderCompact ? "mt-1" : "mt-2")}>
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className={cn("grid w-full grid-cols-3", isHeaderCompact ? "mb-2 h-9" : "mb-3 h-11")}>
-                  <TabsTrigger value="todo" className="gap-2" data-testid="tab-todo">
-                    À faire 
-                    <span className="bg-sky-100 text-sky-800 px-2 py-0.5 rounded-full text-xs font-semibold">
+                <TabsList className={cn("grid w-full grid-cols-3 text-sm", isHeaderCompact ? "mb-1 h-9" : "mb-2 h-10")}>
+                  <TabsTrigger value="todo" className="gap-1.5 text-xs sm:text-sm" data-testid="tab-todo">
+                    <span className="hidden sm:inline">À faire</span>
+                    <span className="sm:hidden">À faire</span>
+                    <span className="bg-sky-100 text-sky-800 px-1.5 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold">
                       {todoTasks.length}
                     </span>
                   </TabsTrigger>
-                  <TabsTrigger value="done" className="gap-2" data-testid="tab-done">
-                    <span className="hidden sm:inline">Terminées (Aujourd'hui)</span>
-                    <span className="sm:hidden">Terminées</span>
-                    <span className="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full text-xs font-semibold">
+                  <TabsTrigger value="done" className="gap-1.5 text-xs sm:text-sm" data-testid="tab-done">
+                    <span className="hidden sm:inline">Terminées</span>
+                    <span className="sm:hidden">✓</span>
+                    <span className="bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold">
                       {doneTasks.length}
                     </span>
                   </TabsTrigger>
-                  <TabsTrigger value="history" data-testid="tab-history">
-                    Historique
-                    <span className="bg-slate-200 text-slate-700 px-2 py-0.5 rounded-full text-xs font-semibold ml-1">
-                      📅
-                    </span>
+                  <TabsTrigger value="history" className="gap-1 text-xs sm:text-sm" data-testid="tab-history">
+                    <span className="hidden sm:inline">Historique</span>
+                    <span className="sm:hidden">📅</span>
                   </TabsTrigger>
                 </TabsList>
               </Tabs>

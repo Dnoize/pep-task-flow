@@ -309,7 +309,7 @@ export const TaskCard = ({ task, onToggle, onEdit, onSubTaskToggle, onDelete, on
           <Checkbox
             checked={task.completed}
             className={cn(
-              "h-5 w-5 pointer-events-none data-[state=checked]:bg-success data-[state=checked]:border-success transition-all duration-300",
+              "h-5 w-5 rounded-md pointer-events-none data-[state=checked]:bg-success data-[state=checked]:border-success transition-all duration-300",
               isCompleting && "animate-checkmark"
             )}
             role="checkbox"
@@ -317,7 +317,7 @@ export const TaskCard = ({ task, onToggle, onEdit, onSubTaskToggle, onDelete, on
           />
         </button>
         <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between gap-2 mb-1.5">
+          <div className="flex items-start justify-between gap-2 mb-1">
             <p 
               className={cn(
                 "text-[15px] font-medium leading-snug tracking-tight transition-all duration-200",
@@ -328,7 +328,7 @@ export const TaskCard = ({ task, onToggle, onEdit, onSubTaskToggle, onDelete, on
               {task.title}
             </p>
             <span className={cn(
-              "shrink-0 text-xs",
+              "shrink-0 text-[11px]",
               getPriorityColor(task.priority)
             )}>
               {getPriorityLabel(task.priority)}
@@ -337,7 +337,7 @@ export const TaskCard = ({ task, onToggle, onEdit, onSubTaskToggle, onDelete, on
           
           {task.description && (
             <p className={cn(
-              "text-sm text-muted-foreground mb-2 line-clamp-2 leading-snug",
+              "text-sm text-muted-foreground mb-1.5 line-clamp-2 leading-snug",
               task.completed && "line-through"
             )}>
               {task.description}
@@ -345,7 +345,7 @@ export const TaskCard = ({ task, onToggle, onEdit, onSubTaskToggle, onDelete, on
           )}
 
           {onAddSubTask && onReorderSubTasks && onDeleteSubTask && (
-            <div className="my-2" onClick={(e) => e.stopPropagation()}>
+            <div className="my-1.5" onClick={(e) => e.stopPropagation()}>
               <SubTaskList
                 taskId={task.id}
                 subTasks={task.subTasks || []}
@@ -357,9 +357,9 @@ export const TaskCard = ({ task, onToggle, onEdit, onSubTaskToggle, onDelete, on
             </div>
           )}
           
-          <div className="flex justify-between items-center text-xs mt-2">
+          <div className="flex justify-between items-center text-xs mt-1.5">
             <span className={cn(
-              "px-2 py-0.5 rounded-full text-[11px]",
+              "px-2 py-0.5 rounded-full text-[10px]",
               task.completed 
                 ? "bg-success/20 text-success-foreground" 
                 : "bg-primary/20 text-primary"
@@ -367,7 +367,7 @@ export const TaskCard = ({ task, onToggle, onEdit, onSubTaskToggle, onDelete, on
               Créé: {formatDate(task.createdAt)}
             </span>
             {task.completedAt && (
-              <span className="px-2 py-0.5 rounded-full bg-success/20 text-success-foreground text-[11px]">
+              <span className="px-2 py-0.5 rounded-full bg-success/20 text-success-foreground text-[10px]">
                 Terminé: {formatDate(task.completedAt)}
               </span>
             )}

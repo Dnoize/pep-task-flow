@@ -6,13 +6,13 @@ interface ProgressRibbonProps {
 
 export const ProgressRibbon = ({ progress, totalTasks, completedTasks }: ProgressRibbonProps) => {
   return (
-    <div className="max-w-md mx-auto mb-6" data-testid="progress-percent">
-      <div className="flex justify-between text-sm text-muted-foreground mb-2">
-        <span className="flex items-center gap-2">
-          <span>🎈</span>
+    <div className="max-w-md mx-auto mb-3 lg:mb-6" data-testid="progress-percent">
+      <div className="flex justify-between text-xs sm:text-sm text-muted-foreground mb-1.5">
+        <span className="flex items-center gap-1.5">
+          <span className="text-sm">🎈</span>
           <span className="font-medium">Progression du jour</span>
         </span>
-        <span className="font-semibold">{Math.round(progress)}%</span>
+        <span className="font-semibold tabular-nums">{Math.round(progress)}%</span>
       </div>
       
       <div className="relative w-full bg-muted rounded-full h-2 overflow-visible">
@@ -22,10 +22,10 @@ export const ProgressRibbon = ({ progress, totalTasks, completedTasks }: Progres
           style={{ width: `${progress}%` }}
         />
         
-        {/* Discrete dot marker */}
+        {/* Discrete dot marker - smaller and more subtle */}
         <div 
-          className="absolute -top-1 size-3 rounded-full bg-sky-500 shadow-sm transition-all duration-500 ease-out"
-          style={{ left: `calc(${progress}% - 6px)` }}
+          className="absolute -top-[2px] size-2.5 rounded-full bg-sky-600 shadow-sm transition-all duration-500 ease-out"
+          style={{ left: `calc(${progress}% - 5px)` }}
           aria-hidden="true"
           title={`${completedTasks} / ${totalTasks}`}
         />
