@@ -270,7 +270,7 @@ const Index = () => {
           <div 
             ref={stickyWrapperRef}
             className={cn(
-              "sticky top-0 z-40 bg-slate-50/95 backdrop-blur-md supports-[backdrop-filter]:bg-slate-50/80 border-b border-slate-200",
+              "relative sticky top-0 z-40 bg-slate-50/95 backdrop-blur-md supports-[backdrop-filter]:bg-slate-50/80 border-b border-slate-200",
               "transition-all duration-300 ease-out will-change-[max-height]",
               "-mx-4 px-4",
               "py-1 lg:py-4 overflow-visible",
@@ -286,7 +286,7 @@ const Index = () => {
                 height: '200px',
                 right: '-24px',
                 top: '-16px',
-                zIndex: 0,
+                zIndex: 1,
                 opacity: 0.05
               }}
               aria-hidden="true"
@@ -388,7 +388,7 @@ const Index = () => {
             )}
           </div>
 
-          <div className="space-y-4 mt-5">
+          <div className="relative space-y-4 mt-5">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsContent value="todo" className="mt-0 space-y-4">
                 {!isHeaderCompact && (
