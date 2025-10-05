@@ -392,7 +392,7 @@ const Index = () => {
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsContent value="todo" className="mt-0 space-y-4">
                 {!isHeaderCompact && (
-                  <div ref={addTaskRef} className="pt-4">
+                  <div ref={addTaskRef} className="pt-8">
                     <AddTaskForm onAdd={addTask} />
                   </div>
                 )}
