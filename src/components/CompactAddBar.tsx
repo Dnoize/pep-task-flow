@@ -21,15 +21,15 @@ export const CompactAddBar = forwardRef<HTMLButtonElement, CompactAddBarProps>(
         type="button"
         onClick={handleClick}
         className={cn(
-          "flex gap-2 items-center w-full transition-all duration-300 px-3 py-2.5 rounded-xl border border-border bg-background hover:bg-muted/50 active:bg-muted cursor-pointer min-h-[44px]",
+          "flex gap-1.5 items-center justify-center w-full transition-all duration-300 px-3 py-2 rounded-lg border border-dashed border-slate-300 bg-slate-50 hover:bg-slate-100 active:bg-slate-200 cursor-pointer h-9",
           !visible && "opacity-0 h-0 overflow-hidden pointer-events-none",
           className
         )}
         data-testid="composer-compact"
       >
-        <Plus className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-        <span className="text-sm text-muted-foreground text-left flex-1" style={{ fontSize: '16px' }}>
-          🎈 Ajout rapide...
+        <Plus className="h-3.5 w-3.5 text-slate-400 flex-shrink-0" />
+        <span className="text-xs text-slate-500" style={{ fontSize: '12px' }}>
+          Nouvelle tâche
         </span>
       </button>
     );

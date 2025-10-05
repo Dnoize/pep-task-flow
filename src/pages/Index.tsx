@@ -85,6 +85,21 @@ const Index = () => {
     return () => observer.disconnect();
   }, []);
 
+  // Validate header height in compact mode
+  useEffect(() => {
+    if (isHeaderCompact && stickyWrapperRef.current) {
+      const height = stickyWrapperRef.current.offsetHeight;
+      const svh = window.innerHeight;
+      const percentage = (height / svh) * 100;
+      
+      if (percentage > 12) {
+        console.warn(`⚠️ Header dépasse 12svh: ${percentage.toFixed(1)}% (${height}px)`);
+      } else {
+        console.log(`✅ Header OK: ${percentage.toFixed(1)}% (${height}px)`);
+      }
+    }
+  }, [isHeaderCompact]);
+
   // Track input focus to hide FAB
   useEffect(() => {
     const handleFocus = (e: FocusEvent) => {
@@ -258,8 +273,8 @@ const Index = () => {
               "sticky top-0 z-40 bg-slate-50/95 backdrop-blur-md supports-[backdrop-filter]:bg-slate-50/80 border-b border-slate-200",
               "transition-all duration-300 ease-out will-change-[max-height]",
               "-mx-4 px-4",
-              "py-1.5 lg:py-4 overflow-visible",
-              "[--hdr:15svh] lg:[--hdr:none]",
+              "py-1 lg:py-4 overflow-visible",
+              "[--hdr:12svh] lg:[--hdr:none]",
               "max-h-[var(--hdr)] lg:max-h-none"
             )}
           >
@@ -286,16 +301,16 @@ const Index = () => {
               <h1 className={cn(
                 "font-bold transition-all duration-300 ease-out",
                 isHeaderCompact 
-                  ? 'text-lg leading-tight' 
+                  ? 'text-sm font-semibold leading-none mb-0' 
                   : 'text-lg sm:text-xl lg:text-5xl mb-1 lg:mb-2 leading-tight'
               )}
               style={{
-                background: 'linear-gradient(to right, #60A5FA, #34D399)',
+                background: 'linear-gradient(to right, #0284c7, #059669)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 backgroundClip: 'text',
               }}>
-                🎈 Balloon Tasks 🎈
+                {isHeaderCompact ? 'Balloon Tasks' : '🎈 Balloon Tasks 🎈'}
               </h1>
               {!isHeaderCompact && (
                 <p className="hidden lg:block text-muted-foreground mb-2 lg:mb-3 text-xs lg:text-base">
@@ -308,29 +323,50 @@ const Index = () => {
                 progress={tasks.length > 0 ? (doneTasks.length / tasks.length) * 100 : 0}
                 totalTasks={tasks.length}
                 completedTasks={doneTasks.length}
+                compact={isHeaderCompact}
                 data-testid="progress-percent"
               />
             </div>
 
             {/* Tabs */}
-            <div className={cn("transition-all", isHeaderCompact ? "mt-1" : "mt-1.5 lg:mt-2")}>
+            <div className={cn("transition-all", isHeaderCompact ? "mt-0.5 mb-0" : "mt-1.5 lg:mt-2")}>
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className={cn("grid w-full grid-cols-3 text-sm", isHeaderCompact ? "mb-0.5 h-9" : "mb-1 lg:mb-2 h-9 lg:h-10")}>
-                  <TabsTrigger value="todo" className="gap-1.5 text-xs sm:text-sm" data-testid="tab-todo">
-                    <span className="hidden sm:inline">À faire</span>
-                    <span className="sm:hidden">À faire</span>
-                    <span className="bg-sky-100 text-sky-800 px-1.5 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold">
+                <TabsList className={cn(
+                  "grid w-full grid-cols-3",
+                  isHeaderCompact ? "h-8 text-[11px]" : "h-9 lg:h-10 text-sm"
+                )}>
+                  <TabsTrigger 
+                    value="todo" 
+                    className={cn("gap-1.5", isHeaderCompact ? "text-[11px]" : "text-xs sm:text-sm")} 
+                    data-testid="tab-todo"
+                  >
+                    <span>À faire</span>
+                    <span className={cn(
+                      "bg-sky-100 text-sky-800 px-1.5 py-0.5 rounded-full font-semibold",
+                      isHeaderCompact ? "text-[9px]" : "text-[10px] sm:text-xs"
+                    )}>
                       {todoTasks.length}
                     </span>
                   </TabsTrigger>
-                  <TabsTrigger value="done" className="gap-1.5 text-xs sm:text-sm" data-testid="tab-done">
+                  <TabsTrigger 
+                    value="done" 
+                    className={cn("gap-1.5", isHeaderCompact ? "text-[11px]" : "text-xs sm:text-sm")} 
+                    data-testid="tab-done"
+                  >
                     <span className="hidden sm:inline">Terminées</span>
                     <span className="sm:hidden">✓</span>
-                    <span className="bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold">
+                    <span className={cn(
+                      "bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded-full font-semibold",
+                      isHeaderCompact ? "text-[9px]" : "text-[10px] sm:text-xs"
+                    )}>
                       {doneTasks.length}
                     </span>
                   </TabsTrigger>
-                  <TabsTrigger value="history" className="gap-1 text-xs sm:text-sm" data-testid="tab-history">
+                  <TabsTrigger 
+                    value="history" 
+                    className={cn("gap-1", isHeaderCompact ? "text-[11px]" : "text-xs sm:text-sm")} 
+                    data-testid="tab-history"
+                  >
                     <span className="hidden sm:inline">Historique</span>
                     <span className="sm:hidden">📅</span>
                   </TabsTrigger>
@@ -340,14 +376,13 @@ const Index = () => {
 
             {/* Compact Add Bar - Mobile only, shown when compact */}
             {isHeaderCompact && activeTab === "todo" && (
-              <div className="lg:hidden">
+              <div className="lg:hidden mt-1">
                 <CompactAddBar
                   ref={compactButtonRef}
                   onAdd={() => {
                     setIsCreationDialogOpen(true);
                   }}
                   visible={isHeaderCompact}
-                  className="mb-1"
                 />
               </div>
             )}
